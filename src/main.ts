@@ -1,3 +1,4 @@
+import { ValidationPipe } from "@nestjs/common";
 import { NestFactory } from "@nestjs/core";
 import { DocumentBuilder, SwaggerModule } from "@nestjs/swagger";
 import { NestExpressApplication } from "@nestjs/platform-express";
@@ -12,6 +13,8 @@ dotenv.config();
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
+
+  app.useGlobalPipes(new ValidationPipe({ whitelist: true }));
 
   app.useStaticAssets(join(process.cwd(), "uploads"), {
     prefix: "/uploads/",

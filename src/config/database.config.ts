@@ -12,8 +12,7 @@ dotenv.config();
  */
 export class SnakeNamingStrategy
   extends DefaultNamingStrategy
-  implements NamingStrategyInterface
-{
+  implements NamingStrategyInterface {
   tableName(className: string, customName: string): string {
     if (customName) return customName;
     const snakeCasedClassName = snakeCase(className);
