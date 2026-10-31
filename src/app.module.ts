@@ -1,14 +1,16 @@
-import { Module } from "@nestjs/common";
-import { ConfigModule } from "@nestjs/config";
-import { PostgresDatabaseProviderModule } from "@/providers/database/postgres/provider.module";
-import { AppController } from "@/src/app.controller";
-import { AppService } from "@/src/app.service";
-import global_config from "@/config/global_config";
-import { BullModule } from "@nestjs/bull";
+import { Module } from '@nestjs/common';
+import { ConfigModule } from '@nestjs/config';
+import { PostgresDatabaseProviderModule } from '@/providers/database/postgres/provider.module';
+import { AppController } from '@/src/app.controller';
+import { AppService } from '@/src/app.service';
+import global_config from '@/config/global_config';
+import { BullModule } from '@nestjs/bull';
+import { UserModule } from '@/modules/user/user.module';
 
 @Module({
   imports: [
     PostgresDatabaseProviderModule,
+    UserModule,
 
     ConfigModule.forRoot({
       isGlobal: true,
