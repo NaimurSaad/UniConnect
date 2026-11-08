@@ -1,90 +1,90 @@
 import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { Department } from './entities/department.entity';
+import { Faculty } from './entities/faculty.entity';
 import { AcademicProgram } from './entities/academic-program.entity';
-import { CreateDepartmentDto, UpdateDepartmentDto } from './dto/department.dto';
+import { CreateFacultyDto, UpdateFacultyDto } from './dto/faculty.dto';
 import { CreateAcademicProgramDto, UpdateAcademicProgramDto } from './dto/academic-program.dto';
 
 @Injectable()
 export class UniversityService {
   constructor(
-    @InjectRepository(Department) private readonly departmentRepository: Repository<Department>,
+    @InjectRepository(Faculty) private readonly facultyRepository: Repository<Faculty>,
     @InjectRepository(AcademicProgram) private readonly programRepository: Repository<AcademicProgram>,
   ) {}
 
-  //Departments
+  //Faculties
 
-  async getDepartments() {
+  async getFaculties() {
     try {
-      return await this.departmentRepository.find({ relations: ['programs'] });
+      return await this.facultyRepository.find({ relations: ['programs'] });
     } catch (error) {
       throw error;
     }
   }
 
-  async getDepartmentById(id: number) {
+  async getFacultyById(id: number) {
     try {
-      const department = await this.departmentRepository.findOne({
+      const faculty = await this.facultyRepository.findOne({
         where: { id },
         relations: ['programs'],
       });
-      if (!department) {
-        throw new NotFoundException(`Department with ID ${id} not found`);
+      if (!faculty) {
+        throw new NotFoundException(`Faculty with ID ${id} not found`);
       }
-      return department;
+      return faculty;
     } catch (error) {
       throw error;
     }
   }
 
-  async createDepartment(dto: CreateDepartmentDto) {
+  async createFaculty(dto: CreateFacultyDto) {
     try {
-      const existing = await this.departmentRepository.findOne({
+      const existing = await this.facultyRepository.findOne({
         where: [{ name: dto.name }, { code: dto.code }],
       });
       if (existing) {
-        throw new ConflictException('Department with this name or code already exists');
+        throw new ConflictException('Faculty with this name or code already exists');
       }
 
-      const department = this.departmentRepository.create(dto);
-      return await this.departmentRepository.save(department);
+      const faculty = this.facultyRepository.create(dto);
+      return await this.facultyRepository.save(faculty);
     } catch (error) {
       throw error;
     }
   }
 
-  async updateDepartment(id: number, dto: UpdateDepartmentDto) {
+  async updateFaculty(id: number, dto: UpdateFacultyDto) {
     try {
-      const department = await this.departmentRepository.findOne({ where: { id } });
-      if (!department) {
-        throw new NotFoundException(`Department with ID ${id} not found`);
+      const faculty = await this.facultyRepository.findOne({ where: { id } });
+      if (!faculty) {
+        throw new NotFoundException(`Faculty with ID ${id} not found`);
       }
 
-      Object.assign(department, dto);
-      return await this.departmentRepository.save(department);
+      Object.assign(faculty, dto);
+      return await this.facultyRepository.save(faculty);
     } catch (error) {
       throw error;
     }
   }
 
-  async deleteDepartment(id: number) {
+  async deleteFaculty(id: number) {
     try {
-      const department = await this.departmentRepository.findOne({ where: { id } });
-      if (!department) {
-        throw new NotFoundException(`Department with ID ${id} not found`);
+      const faculty = await this.facultyRepository.findOne({ where: { id } });
+      if (!faculty) {
+        throw new NotFoundException(`Faculty with ID ${id} not found`);
       }
-      return await this.departmentRepository.delete({ id });
+      return await this.facultyRepository.delete({ id });
     } catch (error) {
       throw error;
     }
   }
 
-  // Academic programs
+  //Academic programs
 
   async getAcademicPrograms() {
     try {
-      return await this.programRepository.find({ relations: ['department'] });
+      return await this.programRepository.find({ relations: ['faculty'] });
     } catch (error) {
       throw error;
     }
@@ -94,7 +94,7 @@ export class UniversityService {
     try {
       const program = await this.programRepository.findOne({
         where: { id },
-        relations: ['department'],
+        relations: ['faculty'],
       });
       if (!program) {
         throw new NotFoundException(`Academic program with ID ${id} not found`);
@@ -107,11 +107,11 @@ export class UniversityService {
 
   async createAcademicProgram(dto: CreateAcademicProgramDto) {
     try {
-      const department = await this.departmentRepository.findOne({
-        where: { id: dto.departmentId },
+      const faculty = await this.facultyRepository.findOne({
+        where: { id: dto.facultyId },
       });
-      if (!department) {
-        throw new NotFoundException(`Department with ID ${dto.departmentId} not found`);
+      if (!faculty) {
+        throw new NotFoundException(`Faculty with ID ${dto.facultyId} not found`);
       }
 
       const program = this.programRepository.create(dto);
@@ -128,12 +128,12 @@ export class UniversityService {
         throw new NotFoundException(`Academic program with ID ${id} not found`);
       }
 
-      if (dto.departmentId) {
-        const department = await this.departmentRepository.findOne({
-          where: { id: dto.departmentId },
+      if (dto.facultyId) {
+        const faculty = await this.facultyRepository.findOne({
+          where: { id: dto.facultyId },
         });
-        if (!department) {
-          throw new NotFoundException(`Department with ID ${dto.departmentId} not found`);
+        if (!faculty) {
+          throw new NotFoundException(`Faculty with ID ${dto.facultyId} not found`);
         }
       }
 

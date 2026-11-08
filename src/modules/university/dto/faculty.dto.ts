@@ -1,6 +1,6 @@
 import { IsNotEmpty, IsOptional, IsString, MaxLength } from 'class-validator';
 
-export class CreateDepartmentDto {
+export class CreateFacultyDto {
   @IsNotEmpty()
   @IsString()
   @MaxLength(120)
@@ -12,7 +12,7 @@ export class CreateDepartmentDto {
   code!: string;
 }
 
-export class UpdateDepartmentDto {
+export class UpdateFacultyDto {
   @IsOptional()
   @IsString()
   @MaxLength(120)

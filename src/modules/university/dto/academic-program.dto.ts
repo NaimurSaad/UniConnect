@@ -4,7 +4,7 @@ import { DegreeLevel } from '@/common/enums/degree-level.enum';
 export class CreateAcademicProgramDto {
   @IsNotEmpty()
   @IsInt()
-  departmentId!: number;
+  facultyId!: number;
 
   @IsNotEmpty()
   @IsString()
@@ -19,7 +19,7 @@ export class CreateAcademicProgramDto {
 export class UpdateAcademicProgramDto {
   @IsOptional()
   @IsInt()
-  departmentId?: number;
+  facultyId?: number;
 
   @IsOptional()
   @IsString()

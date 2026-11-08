@@ -2,10 +2,10 @@ import { MigrationInterface, QueryRunner, Table, TableUnique } from 'typeorm';
 
 export class CreateUniversityTables1793425090000 implements MigrationInterface {
   public async up(queryRunner: QueryRunner): Promise<void> {
-    // 1. Departments table
+    // 1. Faculties table
     await queryRunner.createTable(
       new Table({
-        name: 'departments',
+        name: 'faculties',
         columns: [
           {
             name: 'id',
@@ -52,7 +52,7 @@ export class CreateUniversityTables1793425090000 implements MigrationInterface {
             generationStrategy: 'increment',
           },
           {
-            name: 'department_id',
+            name: 'faculty_id',
             type: 'int',
             isNullable: false,
           },
@@ -78,8 +78,8 @@ export class CreateUniversityTables1793425090000 implements MigrationInterface {
         ],
         foreignKeys: [
           {
-            columnNames: ['department_id'],
-            referencedTableName: 'departments',
+            columnNames: ['faculty_id'],
+            referencedTableName: 'faculties',
             referencedColumnNames: ['id'],
             onDelete: 'CASCADE',
           },
@@ -88,18 +88,18 @@ export class CreateUniversityTables1793425090000 implements MigrationInterface {
       true,
     );
 
-    // one program name + degree_level per department
+    // Unique constraint: one program name + degree_level per faculty
     await queryRunner.createUniqueConstraint(
       'academic_programs',
       new TableUnique({
-        name: 'UQ_department_program_degree',
-        columnNames: ['department_id', 'name', 'degree_level'],
+        name: 'UQ_faculty_program_degree',
+        columnNames: ['faculty_id', 'name', 'degree_level'],
       }),
     );
   }
 
   public async down(queryRunner: QueryRunner): Promise<void> {
     await queryRunner.dropTable('academic_programs');
-    await queryRunner.dropTable('departments');
+    await queryRunner.dropTable('faculties');
   }
 }

@@ -1,19 +1,19 @@
 import { Column, CreateDateColumn, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn, Unique } from 'typeorm';
 import { DegreeLevel } from '@/common/enums/degree-level.enum';
-import { Department } from './department.entity';
+import { Faculty } from './faculty.entity';
 
 @Entity({ name: 'academic_programs' })
-@Unique(['departmentId', 'name', 'degreeLevel'])
+@Unique(['facultyId', 'name', 'degreeLevel'])
 export class AcademicProgram {
   @PrimaryGeneratedColumn()
   id!: number;
 
-  @Column({ name: 'department_id' })
-  departmentId!: number;
+  @Column({ name: 'faculty_id' })
+  facultyId!: number;
 
-  @ManyToOne(() => Department, (department) => department.programs, { onDelete: 'CASCADE' })
-  @JoinColumn({ name: 'department_id' })
-  department!: Department;
+  @ManyToOne(() => Faculty, (faculty) => faculty.programs, { onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'faculty_id' })
+  faculty!: Faculty;
 
   @Column({ length: 150 })
   name!: string;

@@ -1,43 +1,43 @@
 import { Body, Controller, Delete, Get, Param, ParseIntPipe, Patch, Post } from '@nestjs/common';
 import { UniversityService } from './university.service';
-import { CreateDepartmentDto, UpdateDepartmentDto } from './dto/department.dto';
+import { CreateFacultyDto, UpdateFacultyDto } from './dto/faculty.dto';
 import { CreateAcademicProgramDto, UpdateAcademicProgramDto } from './dto/academic-program.dto';
 
 @Controller('university')
 export class UniversityController {
   constructor(private readonly universityService: UniversityService) {}
 
-  // Departments
+  //Faculties
 
-  @Get('departments')
-  async getDepartments() {
-    return await this.universityService.getDepartments();
+  @Get('faculties')
+  async getFaculties() {
+    return await this.universityService.getFaculties();
   }
 
-  @Get('departments/:id')
-  async getDepartmentById(@Param('id', ParseIntPipe) id: number) {
-    return await this.universityService.getDepartmentById(id);
+  @Get('faculties/:id')
+  async getFacultyById(@Param('id', ParseIntPipe) id: number) {
+    return await this.universityService.getFacultyById(id);
   }
 
-  @Post('departments')
-  async createDepartment(@Body() dto: CreateDepartmentDto) {
-    return await this.universityService.createDepartment(dto);
+  @Post('faculties')
+  async createFaculty(@Body() dto: CreateFacultyDto) {
+    return await this.universityService.createFaculty(dto);
   }
 
-  @Patch('departments/:id')
-  async updateDepartment(
+  @Patch('faculties/:id')
+  async updateFaculty(
     @Param('id', ParseIntPipe) id: number,
-    @Body() dto: UpdateDepartmentDto,
+    @Body() dto: UpdateFacultyDto,
   ) {
-    return await this.universityService.updateDepartment(id, dto);
+    return await this.universityService.updateFaculty(id, dto);
   }
 
-  @Delete('departments/:id')
-  async deleteDepartment(@Param('id', ParseIntPipe) id: number) {
-    return await this.universityService.deleteDepartment(id);
+  @Delete('faculties/:id')
+  async deleteFaculty(@Param('id', ParseIntPipe) id: number) {
+    return await this.universityService.deleteFaculty(id);
   }
 
-  // Academic programs
+  //Academic programs
 
   @Get('programs')
   async getAcademicPrograms() {
