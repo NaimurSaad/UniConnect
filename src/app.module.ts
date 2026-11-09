@@ -9,6 +9,7 @@ import { UserModule } from '@/modules/user/user.module';
 import { UniversityModule } from '@/modules/university/university.module';
 import { AuthModule } from '@/modules/auth/auth.module';
 import { AffiliationModule } from '@/modules/affiliation/affiliation.module';
+import { ModerationModule } from '@/modules/moderation/moderation.module';
 
 
 @Module({
@@ -18,6 +19,7 @@ import { AffiliationModule } from '@/modules/affiliation/affiliation.module';
     UniversityModule,
     AuthModule,
     AffiliationModule,
+    ModerationModule,
 
     ConfigModule.forRoot({
       isGlobal: true,
