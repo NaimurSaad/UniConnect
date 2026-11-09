@@ -67,6 +67,32 @@ export class SocialFeedController {
   }
 
   /**
+   * Validate Post Creation DTO Pipeline:
+   * POST /feed/posts/validate-create
+   */
+  @Post('posts/validate-create')
+  validateCreatePost(@Body() dto: CreatePostDto) {
+    return {
+      valid: true,
+      type: 'create',
+      data: dto,
+    };
+  }
+
+  /**
+   * Validate Post Update DTO Pipeline:
+   * PATCH /feed/posts/validate-update
+   */
+  @Patch('posts/validate-update')
+  validateUpdatePost(@Body() dto: UpdatePostDto) {
+    return {
+      valid: true,
+      type: 'update',
+      data: dto,
+    };
+  }
+
+  /**
    * Get Single Post: Includes media, comments, and reactions
    * GET /feed/posts/:id
    */
