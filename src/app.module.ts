@@ -7,6 +7,7 @@ import global_config from '@/config/global_config';
 import { BullModule } from '@nestjs/bull';
 import { UserModule } from '@/modules/user/user.module';
 import { UniversityModule } from '@/modules/university/university.module';
+import { AuthModule } from '@/modules/auth/auth.module';
 
 
 @Module({
@@ -14,6 +15,7 @@ import { UniversityModule } from '@/modules/university/university.module';
     PostgresDatabaseProviderModule,
     UserModule,
     UniversityModule,
+    AuthModule,
 
     ConfigModule.forRoot({
       isGlobal: true,

@@ -11,7 +11,7 @@ export class UserService {
   constructor(
     @InjectRepository(User) private readonly userRepository: Repository<User>,
     @InjectRepository(UserProfile) private readonly profileRepository: Repository<UserProfile>,
-  ) {}
+  ) { }
 
   async getUsers() {
     try {
@@ -112,6 +112,15 @@ export class UserService {
         throw new NotFoundException(`User with ID ${id} not found`);
       }
       return await this.userRepository.delete({ id });
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  async findOneByEmail(email: string): Promise<User | null> {
+    try {
+      const user = await this.userRepository.findOne({ where: { email } });
+      return user;
     } catch (error) {
       throw error;
     }
