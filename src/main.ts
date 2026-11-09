@@ -35,6 +35,7 @@ async function bootstrap() {
       },
       // This policy can block Swagger assets, so we disable it for now
       crossOriginEmbedderPolicy: false,
+      crossOriginResourcePolicy: false,
     }),
   );
 

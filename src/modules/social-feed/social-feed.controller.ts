@@ -8,7 +8,13 @@ import {
   Body,
   Query,
   Headers,
+  UseInterceptors,
+  UploadedFile,
+  BadRequestException,
 } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { multerOptions, MAX_IMAGE_SIZE_BYTES } from '../../common/utils/multer-options.util';
+import { PostMediaType } from './enums/social-feed.enums';
 import { SocialFeedService } from './social-feed.service';
 import {
   CreatePostDto,
@@ -17,6 +23,7 @@ import {
   CreateCommentDto,
   SetReactionDto,
   FeedQueryDto,
+  MediaUploadResponseDto,
 } from './dto';
 
 @Controller('feed')
@@ -30,6 +37,37 @@ export class SocialFeedController {
   @Get('health-check')
   getHealthCheck() {
     return this.socialFeedService.getHealthCheck();
+  }
+
+  /**
+   * Upload Media File:
+   * POST /feed/upload-media
+   * Multipart/form-data with field 'file'
+   */
+  @Post('upload-media')
+  @UseInterceptors(FileInterceptor('file', multerOptions))
+  uploadMedia(
+    @UploadedFile() file: Express.Multer.File,
+  ): MediaUploadResponseDto {
+    if (!file) {
+      throw new BadRequestException('A file is required for upload (field name: "file").');
+    }
+
+    // Enforce 5MB limit for images
+    if (file.mimetype.startsWith('image/') && file.size > MAX_IMAGE_SIZE_BYTES) {
+      throw new BadRequestException('Image file size cannot exceed 5MB.');
+    }
+
+    const media_type = file.mimetype.startsWith('video/')
+      ? PostMediaType.VIDEO
+      : PostMediaType.IMAGE;
+
+    return {
+      media_type,
+      file_url: `/uploads/posts/${file.filename}`,
+      mime_type: file.mimetype,
+      file_size_bytes: file.size,
+    };
   }
 
   /**
