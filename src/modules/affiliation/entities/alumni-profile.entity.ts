@@ -14,12 +14,12 @@ export class AlumniProfile {
     @JoinColumn({ name: 'user_id' })
     user!: User;
 
-    @Column({ name: 'program_id', type: 'int', nullable: true })
-    programId?: number;
+    @Column({ name: 'program_id', type: 'int' })
+    programId!: number;
 
-    @ManyToOne(() => AcademicProgram, { onDelete: 'SET NULL', nullable: true })
+    @ManyToOne(() => AcademicProgram, { onDelete: 'RESTRICT' })
     @JoinColumn({ name: 'program_id' })
-    program?: AcademicProgram;
+    program!: AcademicProgram;
 
     @Column({ name: 'graduation_year', type: 'int' })
     graduationYear!: number;

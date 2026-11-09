@@ -17,12 +17,12 @@ export class StudentProfile {
     @Column({ name: 'student_id', length: 30, unique: true })
     studentId!: string;
 
-    @Column({ name: 'program_id', type: 'int', nullable: true })
-    programId?: number;
+    @Column({ name: 'program_id', type: 'int' })
+    programId!: number;
 
-    @ManyToOne(() => AcademicProgram, { onDelete: 'SET NULL', nullable: true })
+    @ManyToOne(() => AcademicProgram, { onDelete: 'RESTRICT' })
     @JoinColumn({ name: 'program_id' })
-    program?: AcademicProgram;
+    program!: AcademicProgram;
 
     @CreateDateColumn({ name: 'created_at' })
     createdAt!: Date;

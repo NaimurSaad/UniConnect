@@ -14,12 +14,11 @@ export class FacultyProfile {
     @JoinColumn({ name: 'user_id' })
     user!: User;
 
-    @Column({ name: 'faculty_id', type: 'int', nullable: true })
-    facultyId?: number;
-
-    @ManyToOne(() => Faculty, { onDelete: 'SET NULL', nullable: true })
+    @Column({ name: 'faculty_id', type: 'int' })
+    facultyId!: number;
+    @ManyToOne(() => Faculty, { onDelete: 'RESTRICT' })
     @JoinColumn({ name: 'faculty_id' })
-    faculty?: Faculty;
+    faculty!: Faculty;
 
     @Column({ length: 100 })
     designation!: string;
