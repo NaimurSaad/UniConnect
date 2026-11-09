@@ -8,6 +8,7 @@ import { BullModule } from '@nestjs/bull';
 import { UserModule } from '@/modules/user/user.module';
 import { UniversityModule } from '@/modules/university/university.module';
 import { AuthModule } from '@/modules/auth/auth.module';
+import { AffiliationModule } from '@/modules/affiliation/affiliation.module';
 
 
 @Module({
@@ -16,6 +17,7 @@ import { AuthModule } from '@/modules/auth/auth.module';
     UserModule,
     UniversityModule,
     AuthModule,
+    AffiliationModule,
 
     ConfigModule.forRoot({
       isGlobal: true,
