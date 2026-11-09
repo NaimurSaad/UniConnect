@@ -1,10 +1,13 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Patch, Post, UseGuards } from '@nestjs/common';
 import { UserService } from './user.service';
 import { CreateUserDto, UpdateUserDto, UpdateUserProfileDto } from './dto/user.dto';
+import { JwtGuard, RolesGuard } from '@/common/guard';
+import { Roles } from '@/common/decorators';
+import { Role } from '@/common/enums/role.enum';
 
 @Controller('users')
 export class UserController {
-  constructor(private readonly userService: UserService) {}
+  constructor(private readonly userService: UserService) { }
 
   @Get()
   async getUsers() {
@@ -32,6 +35,8 @@ export class UserController {
   }
 
   @Delete(':id')
+  @UseGuards(JwtGuard, RolesGuard)
+  @Roles(Role.ADMIN)
   async deleteUser(@Param('id') id: string) {
     return await this.userService.deleteUser(id);
   }
