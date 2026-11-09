@@ -11,9 +11,11 @@
     "sourceMap": true,
     "outDir": "./dist",
     "strict": true,
+    "strictPropertyInitialization": false,
     "incremental": true,
     "skipLibCheck": true,
-    "typeRoots": ["./src/@types"],
+    "rootDir": "./",
+    "typeRoots": ["./node_modules/@types", "./src/@types"],
     "resolveJsonModule": true,
     "paths": {
       "@/src/*": ["./src/*"],

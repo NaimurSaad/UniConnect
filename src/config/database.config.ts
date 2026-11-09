@@ -77,11 +77,11 @@ export class SnakeNamingStrategy
 
 export const dataSourceOptions: DataSourceOptions = {
   type: "postgres",
-  host: process.env.DB_HOST,
-  port: process.env.DB_PORT ? parseInt(process.env.DB_PORT) : undefined,
-  username: process.env.DB_USER,
-  password: process.env.DB_PASSWORD,
-  database: process.env.DB_DATABASE,
+  host: process.env.DB_HOST || "localhost",
+  port: process.env.DB_PORT ? parseInt(process.env.DB_PORT) : 5432,
+  username: process.env.DB_USER || process.env.DB_USERNAME || "postgres",
+  password: process.env.DB_PASSWORD || "YourNewStrongPassword",
+  database: process.env.DB_DATABASE || process.env.DB_NAME || "uni_connect",
   schema: "public",
   entities: [__dirname + "/../modules/**/entities/*.entity.{ts,js}"],
   namingStrategy: new SnakeNamingStrategy(),

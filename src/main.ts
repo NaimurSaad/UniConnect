@@ -70,6 +70,8 @@ async function bootstrap() {
     maxAge: 86400,
   });
 
-  await app.listen(parseInt(process.env.PORT as string));
+  const port = process.env.PORT ? parseInt(process.env.PORT) : 3000;
+  await app.listen(port);
+  console.log(`UniConnect Application is running on: http://localhost:${port}`);
 }
 bootstrap();
