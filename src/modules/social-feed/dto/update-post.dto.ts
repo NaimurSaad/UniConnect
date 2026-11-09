@@ -1,5 +1,5 @@
 import { IsString, IsOptional, IsEnum } from 'class-validator';
-import { PostVisibility } from '../entities/feed-post.entity';
+import { PostVisibility } from '../enums/social-feed.enums';
 
 export class UpdatePostDto {
   @IsOptional()

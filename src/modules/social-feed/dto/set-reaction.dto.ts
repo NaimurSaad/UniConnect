@@ -1,5 +1,5 @@
 import { IsEnum, IsOptional, IsString } from 'class-validator';
-import { ReactionType } from '../entities/reaction.entity';
+import { ReactionType } from '../enums/social-feed.enums';
 
 export class SetReactionDto {
   @IsEnum(ReactionType, {

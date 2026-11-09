@@ -7,6 +7,7 @@ import { Reaction } from './entities/reaction.entity';
 import { User } from '../users/entities/user.entity';
 import { SocialFeedController } from './social-feed.controller';
 import { SocialFeedService } from './social-feed.service';
+import { IsContentOrMediaPresentConstraint } from './validators/is-content-or-media-present.validator';
 
 @Module({
   imports: [
@@ -19,7 +20,7 @@ import { SocialFeedService } from './social-feed.service';
     ]),
   ],
   controllers: [SocialFeedController],
-  providers: [SocialFeedService],
+  providers: [SocialFeedService, IsContentOrMediaPresentConstraint],
   exports: [SocialFeedService],
 })
 export class SocialFeedModule {}

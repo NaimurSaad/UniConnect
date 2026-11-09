@@ -9,13 +9,9 @@ import {
 } from "typeorm";
 import { FeedPost } from "./feed-post.entity";
 import { User } from "../../users/entities/user.entity";
+import { ReactionType } from "../enums/social-feed.enums";
 
-export enum ReactionType {
-  LIKE = "like",
-  LOVE = "love",
-  SUPPORT = "support",
-  INSIGHTFUL = "insightful",
-}
+export { ReactionType };
 
 @Entity("reactions")
 @Unique(["post_id", "user_id"])

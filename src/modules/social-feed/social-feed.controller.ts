@@ -33,6 +33,19 @@ export class SocialFeedController {
   }
 
   /**
+   * Validate Post Payload: Tests @IsContentOrMediaPresent custom validator
+   * POST /feed/validate-post
+   */
+  @Post('validate-post')
+  validatePost(@Body() dto: CreatePostDto) {
+    return {
+      valid: true,
+      message: 'Post validation passed successfully!',
+      data: dto,
+    };
+  }
+
+  /**
    * Create Post: Business rule: content or media required
    * POST /feed/posts
    */

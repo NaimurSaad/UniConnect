@@ -13,10 +13,9 @@ import { User } from "../../users/entities/user.entity";
 import { PostMedia } from "./post-media.entity";
 import { Comment } from "./comment.entity";
 import { Reaction } from "./reaction.entity";
+import { PostVisibility } from "../enums/social-feed.enums";
 
-export enum PostVisibility {
-  COMMUNITY = "community",
-}
+export { PostVisibility };
 
 @Entity("feed_posts")
 export class FeedPost {

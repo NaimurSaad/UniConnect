@@ -1,4 +1,5 @@
 import { NestFactory } from "@nestjs/core";
+import { ValidationPipe } from "@nestjs/common";
 import { DocumentBuilder, SwaggerModule } from "@nestjs/swagger";
 import { NestExpressApplication } from "@nestjs/platform-express";
 import { AppModule } from "@/src/app.module";
@@ -69,6 +70,14 @@ async function bootstrap() {
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
     maxAge: 86400,
   });
+
+  // 5. Global Validation Pipe
+  app.useGlobalPipes(
+    new ValidationPipe({
+      whitelist: true,
+      transform: true,
+    }),
+  );
 
   const port = process.env.PORT ? parseInt(process.env.PORT) : 3000;
   await app.listen(port);

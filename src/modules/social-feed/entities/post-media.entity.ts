@@ -7,11 +7,9 @@ import {
   JoinColumn,
 } from "typeorm";
 import { FeedPost } from "./feed-post.entity";
+import { PostMediaType } from "../enums/social-feed.enums";
 
-export enum MediaType {
-  IMAGE = "image",
-  VIDEO = "video",
-}
+export { PostMediaType, PostMediaType as MediaType };
 
 @Entity("post_media")
 export class PostMedia {
@@ -27,9 +25,9 @@ export class PostMedia {
 
   @Column({
     type: "enum",
-    enum: MediaType,
+    enum: PostMediaType,
   })
-  media_type!: MediaType;
+  media_type!: PostMediaType;
 
   @Column({ type: "varchar", length: 500 })
   file_url!: string;
