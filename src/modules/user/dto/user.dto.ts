@@ -1,5 +1,6 @@
 import { IsEmail, IsEnum, IsNotEmpty, IsOptional, IsString, MinLength } from 'class-validator';
 import { AccountStatus } from '@/common/enums/account-status.enum';
+import { Role } from '@/common/enums/role.enum';
 
 export class CreateUserDto {
   @IsNotEmpty()
@@ -17,6 +18,10 @@ export class CreateUserDto {
   @IsOptional()
   @IsEnum(AccountStatus)
   accountStatus?: AccountStatus;
+
+  @IsOptional()
+  @IsEnum(Role)
+  role?: Role;
 }
 
 export class UpdateUserDto {
@@ -35,6 +40,10 @@ export class UpdateUserDto {
   @IsOptional()
   @IsEnum(AccountStatus)
   accountStatus?: AccountStatus;
+
+  @IsOptional()
+  @IsEnum(Role)
+  role?: Role;
 }
 
 export class UpdateUserProfileDto {

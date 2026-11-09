@@ -39,6 +39,7 @@ export class AuthService {
             name: user.fullName,
             email: user.email,
             status: user.accountStatus,
+            role: user.role,
         };
         const refreshPayload = {
             user_id: user.id,

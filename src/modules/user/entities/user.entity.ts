@@ -1,5 +1,6 @@
 import { Column, CreateDateColumn, Entity, OneToOne, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
 import { AccountStatus } from '@/common/enums/account-status.enum';
+import { Role } from '@/common/enums/role.enum';
 import { UserProfile } from './user-profile.entity';
 
 @Entity({ name: 'users' })
@@ -18,6 +19,9 @@ export class User {
 
   @Column({ name: 'account_status', type: 'varchar', length: 20, default: AccountStatus.PENDING })
   accountStatus!: AccountStatus;
+
+  @Column({ type: 'varchar', length: 30, default: Role.USER })
+  role!: Role;
 
   @OneToOne(() => UserProfile, (profile) => profile.user, { cascade: true })
   profile?: UserProfile;

@@ -48,6 +48,7 @@ export class UserService {
         email: dto.email,
         passwordHash,
         accountStatus: dto.accountStatus,
+        role: dto.role,
         profile: this.profileRepository.create(),
       });
 
@@ -82,6 +83,7 @@ export class UserService {
       }
       if (dto.fullName) user.fullName = dto.fullName;
       if (dto.accountStatus) user.accountStatus = dto.accountStatus;
+      if (dto.role) user.role = dto.role;
 
       const saved = await this.userRepository.save(user);
       const { passwordHash, ...sanitized } = saved;
@@ -111,7 +113,8 @@ export class UserService {
       if (!user) {
         throw new NotFoundException(`User with ID ${id} not found`);
       }
-      return await this.userRepository.delete({ id });
+      await this.userRepository.delete(id);
+      return { message: `User with ID ${id} successfully deleted` };
     } catch (error) {
       throw error;
     }
