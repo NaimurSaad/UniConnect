@@ -2,9 +2,11 @@ import {
   Injectable,
   NotFoundException,
   BadRequestException,
+  InternalServerErrorException,
+  HttpException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, DataSource } from 'typeorm';
 import { FeedPost, PostVisibility } from './entities/feed-post.entity';
 import { PostMedia } from './entities/post-media.entity';
 import { Comment } from './entities/comment.entity';
@@ -35,6 +37,7 @@ export class SocialFeedService {
     private readonly reactionRepository: Repository<Reaction>,
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
+    private readonly dataSource: DataSource,
   ) {}
 
   /**
@@ -71,12 +74,12 @@ export class SocialFeedService {
   }
 
   /**
-   * 1. Create a Feed Post.
-   * Business Rule: "A post must contain text or at least one media item; enforce in service logic."
+   * 1. Create a Feed Post with Transactional Persistence.
+   * Atomically persists FeedPost and attached PostMedia entries using QueryRunner.
    */
-  async createPost(dto: CreatePostDto, headerUserId?: string): Promise<FeedPost> {
-    const hasContent = dto.content && dto.content.trim().length > 0;
-    const hasMedia = dto.media && dto.media.length > 0;
+  async createPost(createPostDto: CreatePostDto, headerUserId?: string): Promise<FeedPost> {
+    const hasContent = createPostDto.content && createPostDto.content.trim().length > 0;
+    const hasMedia = createPostDto.media && createPostDto.media.length > 0;
 
     if (!hasContent && !hasMedia) {
       throw new BadRequestException(
@@ -84,33 +87,67 @@ export class SocialFeedService {
       );
     }
 
-    const resolvedAuthorId = await this.ensureUserExists(dto.author_id || headerUserId);
+    const resolvedAuthorId = await this.ensureUserExists(createPostDto.author_id || headerUserId);
 
-    // Create the post entity
-    const newPost = this.feedPostRepository.create({
-      author_id: resolvedAuthorId,
-      content: hasContent ? dto.content!.trim() : null,
-      visibility: dto.visibility || PostVisibility.COMMUNITY,
-    });
+    // 1. Initialize QueryRunner for transactional control
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
 
-    const savedPost = await this.feedPostRepository.save(newPost);
+    try {
+      // 2. Instantiate and save the FeedPost record
+      const postEntity = queryRunner.manager.create(FeedPost, {
+        author_id: resolvedAuthorId,
+        content: hasContent ? createPostDto.content!.trim() : null,
+        visibility: createPostDto.visibility || PostVisibility.COMMUNITY,
+      });
 
-    // Save attached media if provided
-    if (hasMedia) {
-      const mediaEntities = dto.media!.map((item, index) =>
-        this.postMediaRepository.create({
-          post_id: savedPost.id,
-          media_type: item.media_type,
-          file_url: item.file_url,
-          mime_type: item.mime_type,
-          file_size_bytes: item.file_size_bytes.toString(),
-          sort_order: item.sort_order ?? index,
-        }),
+      const savedPost = await queryRunner.manager.save(FeedPost, postEntity);
+
+      // 3. If media contains items, loop through, attach post_id, and save to PostMedia
+      if (hasMedia) {
+        for (let i = 0; i < createPostDto.media!.length; i++) {
+          const item = createPostDto.media![i];
+          const mediaEntity = queryRunner.manager.create(PostMedia, {
+            post_id: savedPost.id,
+            media_type: item.media_type,
+            file_url: item.file_url,
+            mime_type: item.mime_type,
+            file_size_bytes: item.file_size_bytes.toString(),
+            sort_order: item.sort_order ?? i,
+          });
+          await queryRunner.manager.save(PostMedia, mediaEntity);
+        }
+      }
+
+      // 4. Commit the transaction
+      await queryRunner.commitTransaction();
+
+      // 5. Retrieve and return the complete post including its attached media relations
+      const completePost = await this.feedPostRepository.findOne({
+        where: { id: savedPost.id },
+        relations: ['media'],
+        order: {
+          media: {
+            sort_order: 'ASC',
+          },
+        },
+      });
+
+      return completePost || savedPost;
+    } catch (error) {
+      // 6. Rollback transaction cleanly on any failure
+      await queryRunner.rollbackTransaction();
+      if (error instanceof HttpException) {
+        throw error;
+      }
+      throw new InternalServerErrorException(
+        `Failed to create post transactionally: ${(error as Error).message}`,
       );
-      savedPost.media = await this.postMediaRepository.save(mediaEntities);
+    } finally {
+      // 7. ALWAYS release queryRunner to prevent connection pool exhaustion
+      await queryRunner.release();
     }
-
-    return savedPost;
   }
 
   /**

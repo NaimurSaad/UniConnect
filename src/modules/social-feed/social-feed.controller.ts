@@ -84,15 +84,15 @@ export class SocialFeedController {
   }
 
   /**
-   * Create Post: Business rule: content or media required
+   * Create Post with Transactional Persistence:
    * POST /feed/posts
    */
   @Post('posts')
   createPost(
-    @Body() dto: CreatePostDto,
+    @Body() createPostDto: CreatePostDto,
     @Headers('x-user-id') headerUserId?: string,
   ) {
-    return this.socialFeedService.createPost(dto, headerUserId);
+    return this.socialFeedService.createPost(createPostDto, headerUserId);
   }
 
   /**
