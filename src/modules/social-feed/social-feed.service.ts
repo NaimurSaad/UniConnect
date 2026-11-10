@@ -19,6 +19,7 @@ import {
   CreateCommentDto,
   SetReactionDto,
   FeedQueryDto,
+  FeedPaginationDto,
 } from './dto';
 
 @Injectable()
@@ -38,7 +39,7 @@ export class SocialFeedService {
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
     private readonly dataSource: DataSource,
-  ) {}
+  ) { }
 
   /**
    * Helper to ensure an author/user exists in the database.
@@ -151,73 +152,43 @@ export class SocialFeedService {
   }
 
   /**
-   * 2. Get Paginated Feed Posts.
-   * Excludes soft-deleted posts, loads author, media, comment count and reaction summary.
+   * 2. Cursor-Based Feed Pagination & Query Optimization.
    */
-  async getFeedPosts(query: FeedQueryDto) {
-    const page = Math.max(1, query.page || 1);
-    const limit = Math.min(50, Math.max(1, query.limit || 10));
-    const skip = (page - 1) * limit;
+  async getFeed(paginationDto: FeedPaginationDto) {
+    const { limit = 10, cursor } = paginationDto;
+    const query = this.feedPostRepository
+      .createQueryBuilder('post')
+      .leftJoinAndSelect('post.media', 'media')
+      .loadRelationCountAndMap('post.comments_count', 'post.comments')
+      .loadRelationCountAndMap('post.reactions_count', 'post.reactions')
+      .where('post.deleted_at IS NULL');
 
-    const [posts, total] = await this.feedPostRepository.findAndCount({
-      relations: {
-        author: true,
-        media: true,
-        comments: true,
-        reactions: true,
-      },
-      order: {
-        created_at: 'DESC',
-      },
-      take: limit,
-      skip: skip,
-    });
+    if (cursor) {
+      query.andWhere('post.created_at < :cursor', { cursor });
+    }
 
-    const data = posts.map((post) => {
-      // Summarize reactions by type
-      const reactionSummary = {
-        like: 0,
-        love: 0,
-        support: 0,
-        insightful: 0,
-        total: post.reactions?.length || 0,
-      };
+    const posts = await query
+      .orderBy('post.created_at', 'DESC')
+      .addOrderBy('media.sort_order', 'ASC')
+      .take(limit)
+      .getMany();
 
-      post.reactions?.forEach((r) => {
-        if (reactionSummary[r.reaction_type] !== undefined) {
-          reactionSummary[r.reaction_type]++;
-        }
-      });
-
-      return {
-        id: post.id,
-        author: post.author
-          ? {
-              id: post.author.id,
-              full_name: post.author.full_name,
-              email: post.author.email,
-            }
-          : null,
-        content: post.content,
-        visibility: post.visibility,
-        created_at: post.created_at,
-        updated_at: post.updated_at,
-        media: (post.media || []).sort((a, b) => a.sort_order - b.sort_order),
-        comments_count: post.comments?.length || 0,
-        reaction_summary: reactionSummary,
-      };
-    });
+    const next_cursor =
+      posts.length > 0 ? posts[posts.length - 1].created_at : null;
 
     return {
-      status: 'success',
-      data,
-      meta: {
-        total,
-        page,
-        limit,
-        totalPages: Math.ceil(total / limit),
-      },
+      data: posts,
+      limit,
+      next_cursor,
+      has_more: posts.length === limit,
     };
+  }
+
+  /**
+   * Backward-compatible getFeedPosts delegator
+   */
+  async getFeedPosts(query: FeedPaginationDto | FeedQueryDto) {
+    return this.getFeed(query as FeedPaginationDto);
   }
 
   /**
@@ -329,10 +300,10 @@ export class SocialFeedService {
         created_at: c.created_at,
         author: c.author
           ? {
-              id: c.author.id,
-              full_name: c.author.full_name,
-              email: c.author.email,
-            }
+            id: c.author.id,
+            full_name: c.author.full_name,
+            email: c.author.email,
+          }
           : null,
       })),
     };

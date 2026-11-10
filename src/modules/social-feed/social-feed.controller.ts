@@ -23,6 +23,7 @@ import {
   CreateCommentDto,
   SetReactionDto,
   FeedQueryDto,
+  FeedPaginationDto,
   MediaUploadResponseDto,
 } from './dto';
 
@@ -96,12 +97,12 @@ export class SocialFeedController {
   }
 
   /**
-   * Get Feed: Paginated community posts
-   * GET /feed/posts?page=1&limit=10
+   * Get Feed: Cursor-based paginated community posts
+   * GET /feed/posts?limit=10&cursor=...
    */
   @Get('posts')
-  getFeedPosts(@Query() query: FeedQueryDto) {
-    return this.socialFeedService.getFeedPosts(query);
+  getFeed(@Query() paginationDto: FeedPaginationDto) {
+    return this.socialFeedService.getFeed(paginationDto);
   }
 
   /**
