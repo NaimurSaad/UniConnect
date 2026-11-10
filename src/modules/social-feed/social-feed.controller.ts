@@ -160,17 +160,24 @@ export class SocialFeedController {
   /**
    * Update Post: Edit content or visibility
    * PATCH /feed/posts/:id
+   * Protected by IsPostAuthorGuard: requires matching 'user-id' (or 'x-user-id') header
    */
   @Patch('posts/:id')
-  updatePost(@Param('id') id: string, @Body() dto: UpdatePostDto) {
-    return this.socialFeedService.updatePost(id, dto);
+  @UseGuards(IsPostAuthorGuard)
+  updatePost(
+    @Param('id') id: string,
+    @Body() updatePostDto: UpdatePostDto,
+  ) {
+    return this.socialFeedService.updatePost(id, updatePostDto);
   }
 
   /**
    * Soft Delete Post: Sets deleted_at timestamp
    * DELETE /feed/posts/:id
+   * Protected by IsPostAuthorGuard: requires matching 'user-id' (or 'x-user-id') header
    */
   @Delete('posts/:id')
+  @UseGuards(IsPostAuthorGuard)
   deletePost(@Param('id') id: string) {
     return this.socialFeedService.deletePost(id);
   }

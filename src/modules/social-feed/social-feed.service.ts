@@ -213,41 +213,29 @@ export class SocialFeedService {
 
   /**
    * 4. Update Post Content / Visibility.
+   * Only active (non-deleted) posts can be updated.
    */
-  async updatePost(id: string, dto: UpdatePostDto) {
-    const post = await this.feedPostRepository.findOne({ where: { id } });
-    if (!post) {
-      throw new NotFoundException(`FeedPost with ID ${id} not found.`);
+  async updatePost(id: string, updatePostDto: UpdatePostDto): Promise<FeedPost> {
+    const post = await this.getPostById(id);
+    if (updatePostDto.content !== undefined) {
+      post.content = updatePostDto.content;
     }
-
-    if (dto.content !== undefined) {
-      post.content = dto.content.trim();
+    if (updatePostDto.visibility !== undefined) {
+      post.visibility = updatePostDto.visibility;
     }
-    if (dto.visibility !== undefined) {
-      post.visibility = dto.visibility;
-    }
-
-    const updated = await this.feedPostRepository.save(post);
-    return {
-      status: 'success',
-      message: 'Post updated successfully.',
-      data: updated,
-    };
+    return this.feedPostRepository.save(post);
   }
 
   /**
    * 5. Soft Delete Post.
+   * Sets deleted_at timestamp using TypeORM softDelete.
    */
-  async deletePost(id: string) {
-    const post = await this.feedPostRepository.findOne({ where: { id } });
-    if (!post) {
-      throw new NotFoundException(`FeedPost with ID ${id} not found.`);
-    }
-
+  async deletePost(id: string): Promise<{ success: boolean; message: string }> {
+    await this.getPostById(id);
     await this.feedPostRepository.softDelete(id);
     return {
-      status: 'success',
-      message: `Post ${id} has been soft-deleted.`,
+      success: true,
+      message: 'Post soft-deleted successfully',
     };
   }
 
