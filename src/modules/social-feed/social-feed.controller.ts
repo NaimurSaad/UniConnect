@@ -12,6 +12,7 @@ import {
   UseGuards,
   UploadedFile,
   BadRequestException,
+  ParseUUIDPipe,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { multerOptions, MAX_IMAGE_SIZE_BYTES } from '../../common/utils/multer-options.util';
@@ -184,15 +185,14 @@ export class SocialFeedController {
 
   /**
    * Add Comment to Post:
-   * POST /feed/posts/:id/comments
+   * POST /feed/posts/:postId/comments
    */
-  @Post('posts/:id/comments')
+  @Post('posts/:postId/comments')
   addComment(
-    @Param('id') postId: string,
-    @Body() dto: CreateCommentDto,
-    @Headers('x-user-id') headerUserId?: string,
+    @Param('postId', ParseUUIDPipe) postId: string,
+    @Body() createCommentDto: CreateCommentDto,
   ) {
-    return this.socialFeedService.addComment(postId, dto, headerUserId);
+    return this.socialFeedService.addComment(postId, createCommentDto);
   }
 
   /**

@@ -241,19 +241,20 @@ export class SocialFeedService {
 
   /**
    * 6. Add a Comment to a Post.
+   * Verifies that the parent post exists and is not soft-deleted.
    */
-  async addComment(postId: string, dto: CreateCommentDto, headerUserId?: string) {
-    const post = await this.feedPostRepository.findOne({ where: { id: postId } });
-    if (!post) {
-      throw new NotFoundException(`FeedPost with ID ${postId} not found.`);
-    }
+  async addComment(postId: string, createCommentDto: CreateCommentDto): Promise<Comment> {
+    // 1. Check parent post existence (excludes soft-deleted posts)
+    await this.getPostById(postId);
 
-    const resolvedAuthorId = await this.ensureUserExists(dto.author_id || headerUserId);
+    // Ensure author exists in DB to satisfy foreign key constraints during testing
+    const resolvedAuthorId = await this.ensureUserExists(createCommentDto.author_id);
 
+    // 2. Create and save comment
     const comment = this.commentRepository.create({
       post_id: postId,
       author_id: resolvedAuthorId,
-      content: dto.content.trim(),
+      content: createCommentDto.content,
     });
 
     return await this.commentRepository.save(comment);
