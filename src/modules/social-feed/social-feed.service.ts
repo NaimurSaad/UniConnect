@@ -20,6 +20,7 @@ import {
   SetReactionDto,
   FeedQueryDto,
   FeedPaginationDto,
+  CommentPaginationDto,
 } from './dto';
 
 @Injectable()
@@ -261,37 +262,46 @@ export class SocialFeedService {
   }
 
   /**
-   * 7. Get Comments for a Post.
+   * 7. Get Comments for a Post with Offset Pagination.
+   * Verifies parent post exists and is not soft-deleted, filters active comments,
+   * orders by created_at ASC, and applies page/limit pagination.
    */
-  async getComments(postId: string) {
-    const post = await this.feedPostRepository.findOne({ where: { id: postId } });
-    if (!post) {
-      throw new NotFoundException(`FeedPost with ID ${postId} not found.`);
-    }
+  async getCommentsByPost(
+    postId: string,
+    paginationDto: CommentPaginationDto,
+  ): Promise<{ data: Comment[]; total: number; page: number; limit: number; total_pages: number }> {
+    // 1. Verify parent post exists
+    await this.getPostById(postId);
 
-    const comments = await this.commentRepository.find({
-      where: { post_id: postId },
-      relations: { author: true },
-      order: { created_at: 'ASC' },
+    const { page = 1, limit = 10 } = paginationDto;
+    const skip = (page - 1) * limit;
+
+    const [comments, total] = await this.commentRepository.findAndCount({
+      where: {
+        post_id: postId,
+        deleted_at: IsNull(),
+      },
+      order: {
+        created_at: 'ASC',
+      },
+      skip,
+      take: limit,
     });
 
     return {
-      status: 'success',
-      post_id: postId,
-      total: comments.length,
-      data: comments.map((c) => ({
-        id: c.id,
-        content: c.content,
-        created_at: c.created_at,
-        author: c.author
-          ? {
-            id: c.author.id,
-            full_name: c.author.full_name,
-            email: c.author.email,
-          }
-          : null,
-      })),
+      data: comments,
+      total,
+      page,
+      limit,
+      total_pages: Math.ceil(total / limit) || 1,
     };
+  }
+
+  /**
+   * Backward-compatible getComments delegator
+   */
+  async getComments(postId: string) {
+    return this.getCommentsByPost(postId, { page: 1, limit: 50 });
   }
 
   /**

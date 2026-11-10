@@ -27,6 +27,7 @@ import {
   SetReactionDto,
   FeedQueryDto,
   FeedPaginationDto,
+  CommentPaginationDto,
   MediaUploadResponseDto,
 } from './dto';
 
@@ -196,12 +197,15 @@ export class SocialFeedController {
   }
 
   /**
-   * Get Comments for Post:
-   * GET /feed/posts/:id/comments
+   * Get Comments for Post with Offset Pagination:
+   * GET /feed/posts/:postId/comments?page=1&limit=10
    */
-  @Get('posts/:id/comments')
-  getComments(@Param('id') postId: string) {
-    return this.socialFeedService.getComments(postId);
+  @Get('posts/:postId/comments')
+  getComments(
+    @Param('postId', ParseUUIDPipe) postId: string,
+    @Query() paginationDto: CommentPaginationDto,
+  ) {
+    return this.socialFeedService.getCommentsByPost(postId, paginationDto);
   }
 
   /**
