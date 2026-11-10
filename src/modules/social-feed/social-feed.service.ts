@@ -6,7 +6,7 @@ import {
   HttpException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, DataSource } from 'typeorm';
+import { Repository, DataSource, IsNull } from 'typeorm';
 import { FeedPost, PostVisibility } from './entities/feed-post.entity';
 import { PostMedia } from './entities/post-media.entity';
 import { Comment } from './entities/comment.entity';
@@ -193,23 +193,19 @@ export class SocialFeedService {
 
   /**
    * 3. Get Single Post by ID.
+   * Excludes soft-deleted posts and eagerly loads media, comments, and reactions.
    */
-  async getPostById(id: string) {
+  async getPostById(id: string): Promise<FeedPost> {
     const post = await this.feedPostRepository.findOne({
-      where: { id },
-      relations: {
-        media: true,
-        comments: true,
-        reactions: true,
-      },
+      where: { id, deleted_at: IsNull() },
+      relations: ['media', 'comments', 'reactions'],
       order: {
         media: { sort_order: 'ASC' },
-        comments: { created_at: 'ASC' },
       },
     });
 
     if (!post) {
-      throw new NotFoundException(`FeedPost with ID ${id} not found.`);
+      throw new NotFoundException(`Post with ID "${id}" not found`);
     }
 
     return post;

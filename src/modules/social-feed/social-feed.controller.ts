@@ -9,6 +9,7 @@ import {
   Query,
   Headers,
   UseInterceptors,
+  UseGuards,
   UploadedFile,
   BadRequestException,
 } from '@nestjs/common';
@@ -16,6 +17,7 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { multerOptions, MAX_IMAGE_SIZE_BYTES } from '../../common/utils/multer-options.util';
 import { PostMediaType } from './enums/social-feed.enums';
 import { SocialFeedService } from './social-feed.service';
+import { IsPostAuthorGuard } from './guards/is-post-author.guard';
 import {
   CreatePostDto,
   CreatePostMediaDto,
@@ -128,6 +130,21 @@ export class SocialFeedController {
       valid: true,
       type: 'update',
       data: dto,
+    };
+  }
+
+  /**
+   * Verify Post Ownership (Guard Protected):
+   * GET /feed/posts/:id/verify-owner
+   * Protected by IsPostAuthorGuard: requires matching 'user-id' (or 'x-user-id') header
+   */
+  @Get('posts/:id/verify-owner')
+  @UseGuards(IsPostAuthorGuard)
+  verifyPostOwner(@Param('id') id: string) {
+    return {
+      authorized: true,
+      message: 'Post ownership verified successfully',
+      post_id: id,
     };
   }
 
