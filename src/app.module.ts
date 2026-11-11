@@ -7,6 +7,7 @@ import global_config from "@/config/global_config";
 import { BullModule } from "@nestjs/bull";
 import { UsersModule } from "./modules/users/users.module";
 import { SocialFeedModule } from "./modules/social-feed/social-feed.module";
+import { ConnectionsModule } from "./modules/connections/connections.module";
 
 @Module({
   imports: [
@@ -25,6 +26,7 @@ import { SocialFeedModule } from "./modules/social-feed/social-feed.module";
     }),
     UsersModule,
     SocialFeedModule,
+    ConnectionsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
