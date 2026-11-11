@@ -27,6 +27,7 @@ import {
   CreateCommentDto,
   UpdateCommentDto,
   SetReactionDto,
+  ReactPostDto,
   FeedQueryDto,
   FeedPaginationDto,
   CommentPaginationDto,
@@ -236,16 +237,15 @@ export class SocialFeedController {
   }
 
   /**
-   * Set Reaction: Business rule: at most one reaction per user per post (upsert/toggle)
-   * POST /feed/posts/:id/reactions
+   * React to Post (Toggle & Upsert):
+   * POST /feed/posts/:postId/reactions
    */
-  @Post('posts/:id/reactions')
-  setReaction(
-    @Param('id') postId: string,
-    @Body() dto: SetReactionDto,
-    @Headers('x-user-id') headerUserId?: string,
+  @Post('posts/:postId/reactions')
+  reactToPost(
+    @Param('postId', ParseUUIDPipe) postId: string,
+    @Body() reactDto: ReactPostDto,
   ) {
-    return this.socialFeedService.setReaction(postId, dto, headerUserId);
+    return this.socialFeedService.reactToPost(postId, reactDto);
   }
 
   /**

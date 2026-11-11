@@ -19,6 +19,7 @@ import {
   CreateCommentDto,
   UpdateCommentDto,
   SetReactionDto,
+  ReactPostDto,
   FeedQueryDto,
   FeedPaginationDto,
   CommentPaginationDto,
@@ -343,17 +344,22 @@ export class SocialFeedService {
   }
 
   /**
-   * 9. Set or Update Reaction.
-   * Business Rule: "At most one reaction per user per post; updates change reaction_type."
+   * 11. Reaction Toggle & Upsert Logic.
+   * - If NO reaction exists: create and save -> { action: 'added', reaction }
+   * - If reaction exists with SAME type: toggle off / remove -> { action: 'removed', message: 'Reaction removed successfully' }
+   * - If reaction exists with DIFFERENT type: update -> { action: 'updated', reaction }
    */
-  async setReaction(postId: string, dto: SetReactionDto, headerUserId?: string) {
-    const post = await this.feedPostRepository.findOne({ where: { id: postId } });
-    if (!post) {
-      throw new NotFoundException(`FeedPost with ID ${postId} not found.`);
-    }
+  async reactToPost(
+    postId: string,
+    reactDto: ReactPostDto,
+  ): Promise<{ action: 'added' | 'updated' | 'removed'; reaction?: Reaction; message?: string }> {
+    // 1. Verify parent post exists
+    await this.getPostById(postId);
 
-    const resolvedUserId = await this.ensureUserExists(dto.user_id || headerUserId);
+    // Ensure user exists in DB to satisfy foreign key constraints during local testing
+    const resolvedUserId = await this.ensureUserExists(reactDto.user_id);
 
+    // 2. Check for existing reaction
     const existingReaction = await this.reactionRepository.findOne({
       where: {
         post_id: postId,
@@ -361,19 +367,35 @@ export class SocialFeedService {
       },
     });
 
-    if (existingReaction) {
-      existingReaction.reaction_type = dto.reaction_type;
-      return await this.reactionRepository.save(existingReaction);
+    // 3. Case A: No reaction yet -> Add
+    if (!existingReaction) {
+      const newReaction = this.reactionRepository.create({
+        post_id: postId,
+        user_id: resolvedUserId,
+        reaction_type: reactDto.reaction_type,
+      });
+      const saved = await this.reactionRepository.save(newReaction);
+      return { action: 'added', reaction: saved };
     }
 
-    // Create new reaction
-    const newReaction = this.reactionRepository.create({
-      post_id: postId,
-      user_id: resolvedUserId,
-      reaction_type: dto.reaction_type,
-    });
+    // 4. Case B: Same reaction -> Toggle off / Remove
+    if (existingReaction.reaction_type === reactDto.reaction_type) {
+      await this.reactionRepository.remove(existingReaction);
+      return { action: 'removed', message: 'Reaction removed successfully' };
+    }
 
-    return await this.reactionRepository.save(newReaction);
+    // 5. Case C: Different reaction -> Update
+    existingReaction.reaction_type = reactDto.reaction_type;
+    const updated = await this.reactionRepository.save(existingReaction);
+    return { action: 'updated', reaction: updated };
+  }
+
+  /**
+   * Backward-compatible setReaction delegator
+   */
+  async setReaction(postId: string, dto: SetReactionDto | ReactPostDto, headerUserId?: string) {
+    const userId = dto.user_id || headerUserId || SocialFeedService.DEFAULT_TEST_USER_ID;
+    return this.reactToPost(postId, { user_id: userId, reaction_type: dto.reaction_type });
   }
 
   /**

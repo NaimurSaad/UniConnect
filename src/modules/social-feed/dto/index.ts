@@ -4,6 +4,7 @@ export * from './update-post.dto';
 export * from './create-comment.dto';
 export * from './update-comment.dto';
 export * from './set-reaction.dto';
+export * from './react-post.dto';
 export * from './feed-query.dto';
 export * from './feed-pagination.dto';
 export * from './comment-pagination.dto';
