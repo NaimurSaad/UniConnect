@@ -16,6 +16,7 @@ import {
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { multerOptions, MAX_IMAGE_SIZE_BYTES } from '../../common/utils/multer-options.util';
+import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { PostMediaType } from './enums/social-feed.enums';
 import { SocialFeedService } from './social-feed.service';
 import { IsPostAuthorGuard } from './guards/is-post-author.guard';
@@ -99,9 +100,9 @@ export class SocialFeedController {
   @Post('posts')
   createPost(
     @Body() createPostDto: CreatePostDto,
-    @Headers('x-user-id') headerUserId?: string,
+    @CurrentUser('id') currentUserId?: string,
   ) {
-    return this.socialFeedService.createPost(createPostDto, headerUserId);
+    return this.socialFeedService.createPost(createPostDto, currentUserId);
   }
 
   /**
@@ -196,8 +197,9 @@ export class SocialFeedController {
   addComment(
     @Param('postId', ParseUUIDPipe) postId: string,
     @Body() createCommentDto: CreateCommentDto,
+    @CurrentUser('id') currentUserId?: string,
   ) {
-    return this.socialFeedService.addComment(postId, createCommentDto);
+    return this.socialFeedService.addComment(postId, createCommentDto, currentUserId);
   }
 
   /**
@@ -245,8 +247,9 @@ export class SocialFeedController {
   reactToPost(
     @Param('postId', ParseUUIDPipe) postId: string,
     @Body() reactDto: ReactPostDto,
+    @CurrentUser('id') currentUserId?: string,
   ) {
-    return this.socialFeedService.reactToPost(postId, reactDto);
+    return this.socialFeedService.reactToPost(postId, reactDto, currentUserId);
   }
 
   /**

@@ -247,12 +247,17 @@ export class SocialFeedService {
    * 6. Add a Comment to a Post.
    * Verifies that the parent post exists and is not soft-deleted.
    */
-  async addComment(postId: string, createCommentDto: CreateCommentDto): Promise<Comment> {
+  async addComment(
+    postId: string,
+    createCommentDto: CreateCommentDto,
+    headerUserId?: string,
+  ): Promise<Comment> {
     // 1. Check parent post existence (excludes soft-deleted posts)
     await this.getPostById(postId);
 
+    const authorId = createCommentDto.author_id || headerUserId;
     // Ensure author exists in DB to satisfy foreign key constraints during testing
-    const resolvedAuthorId = await this.ensureUserExists(createCommentDto.author_id);
+    const resolvedAuthorId = await this.ensureUserExists(authorId);
 
     // 2. Create and save comment
     const comment = this.commentRepository.create({
@@ -353,12 +358,14 @@ export class SocialFeedService {
   async reactToPost(
     postId: string,
     reactDto: ReactPostDto,
+    headerUserId?: string,
   ): Promise<{ action: 'added' | 'updated' | 'removed'; reaction?: Reaction; message?: string }> {
     // 1. Verify parent post exists
     await this.getPostById(postId);
 
+    const userId = reactDto.user_id || headerUserId;
     // Ensure user exists in DB to satisfy foreign key constraints during local testing
-    const resolvedUserId = await this.ensureUserExists(reactDto.user_id);
+    const resolvedUserId = await this.ensureUserExists(userId);
 
     // 2. Check for existing reaction
     const existingReaction = await this.reactionRepository.findOne({

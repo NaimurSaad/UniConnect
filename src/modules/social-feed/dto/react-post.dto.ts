@@ -1,10 +1,10 @@
-import { IsEnum, IsNotEmpty, IsUUID } from 'class-validator';
+import { IsEnum, IsNotEmpty, IsOptional, IsUUID } from 'class-validator';
 import { ReactionType } from '../enums/social-feed.enums';
 
 export class ReactPostDto {
-  @IsNotEmpty({ message: 'user_id is required' })
+  @IsOptional()
   @IsUUID('all', { message: 'user_id must be a valid UUID' })
-  user_id!: string;
+  user_id?: string;
 
   @IsNotEmpty({ message: 'reaction_type is required' })
   @IsEnum(ReactionType, {
@@ -12,4 +12,3 @@ export class ReactPostDto {
   })
   reaction_type!: ReactionType;
 }
-

@@ -1,10 +1,10 @@
-import { IsNotEmpty, IsString, IsUUID, MaxLength } from 'class-validator';
+import { IsNotEmpty, IsOptional, IsString, IsUUID, MaxLength } from 'class-validator';
 import { Transform } from 'class-transformer';
 
 export class CreateCommentDto {
-  @IsNotEmpty({ message: 'author_id is required' })
+  @IsOptional()
   @IsUUID('all', { message: 'author_id must be a valid UUID' })
-  author_id!: string;
+  author_id?: string;
 
   @IsNotEmpty({ message: 'content cannot be empty' })
   @IsString({ message: 'content must be a string' })
