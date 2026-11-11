@@ -9,6 +9,7 @@ import { SocialFeedController } from './social-feed.controller';
 import { SocialFeedService } from './social-feed.service';
 import { IsContentOrMediaPresentConstraint } from './validators/is-content-or-media-present.validator';
 import { IsPostAuthorGuard } from './guards/is-post-author.guard';
+import { IsCommentAuthorGuard } from './guards/is-comment-author.guard';
 
 @Module({
   imports: [
@@ -25,7 +26,8 @@ import { IsPostAuthorGuard } from './guards/is-post-author.guard';
     SocialFeedService,
     IsContentOrMediaPresentConstraint,
     IsPostAuthorGuard,
+    IsCommentAuthorGuard,
   ],
-  exports: [SocialFeedService, IsPostAuthorGuard],
+  exports: [SocialFeedService, IsPostAuthorGuard, IsCommentAuthorGuard],
 })
 export class SocialFeedModule {}

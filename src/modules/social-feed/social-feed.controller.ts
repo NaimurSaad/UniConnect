@@ -19,11 +19,13 @@ import { multerOptions, MAX_IMAGE_SIZE_BYTES } from '../../common/utils/multer-o
 import { PostMediaType } from './enums/social-feed.enums';
 import { SocialFeedService } from './social-feed.service';
 import { IsPostAuthorGuard } from './guards/is-post-author.guard';
+import { IsCommentAuthorGuard } from './guards/is-comment-author.guard';
 import {
   CreatePostDto,
   CreatePostMediaDto,
   UpdatePostDto,
   CreateCommentDto,
+  UpdateCommentDto,
   SetReactionDto,
   FeedQueryDto,
   FeedPaginationDto,
@@ -209,12 +211,28 @@ export class SocialFeedController {
   }
 
   /**
-   * Soft Delete Comment:
-   * DELETE /feed/comments/:commentId
+   * Update Comment Content:
+   * PATCH /feed/comments/:id
+   * Protected by IsCommentAuthorGuard: requires matching 'user-id' (or 'x-user-id') header
    */
-  @Delete('comments/:commentId')
-  deleteComment(@Param('commentId') commentId: string) {
-    return this.socialFeedService.deleteComment(commentId);
+  @Patch('comments/:id')
+  @UseGuards(IsCommentAuthorGuard)
+  updateComment(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() updateCommentDto: UpdateCommentDto,
+  ) {
+    return this.socialFeedService.updateComment(id, updateCommentDto);
+  }
+
+  /**
+   * Soft Delete Comment:
+   * DELETE /feed/comments/:id
+   * Protected by IsCommentAuthorGuard: requires matching 'user-id' (or 'x-user-id') header
+   */
+  @Delete('comments/:id')
+  @UseGuards(IsCommentAuthorGuard)
+  deleteComment(@Param('id', ParseUUIDPipe) id: string) {
+    return this.socialFeedService.deleteComment(id);
   }
 
   /**

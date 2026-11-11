@@ -17,6 +17,7 @@ import {
   CreatePostMediaDto,
   UpdatePostDto,
   CreateCommentDto,
+  UpdateCommentDto,
   SetReactionDto,
   FeedQueryDto,
   FeedPaginationDto,
@@ -305,18 +306,39 @@ export class SocialFeedService {
   }
 
   /**
-   * 8. Soft Delete a Comment.
+   * 8. Get Single Comment by ID.
+   * Excludes soft-deleted comments.
    */
-  async deleteComment(commentId: string) {
-    const comment = await this.commentRepository.findOne({ where: { id: commentId } });
+  async getCommentById(id: string): Promise<Comment> {
+    const comment = await this.commentRepository.findOne({
+      where: { id, deleted_at: IsNull() },
+    });
     if (!comment) {
-      throw new NotFoundException(`Comment with ID ${commentId} not found.`);
+      throw new NotFoundException(`Comment with ID "${id}" not found`);
     }
+    return comment;
+  }
 
-    await this.commentRepository.softDelete(commentId);
+  /**
+   * 9. Update Comment Content.
+   * Verifies comment exists and is not soft-deleted, then updates content and saves.
+   */
+  async updateComment(id: string, updateCommentDto: UpdateCommentDto): Promise<Comment> {
+    const comment = await this.getCommentById(id);
+    comment.content = updateCommentDto.content;
+    return this.commentRepository.save(comment);
+  }
+
+  /**
+   * 10. Soft Delete a Comment.
+   * Verifies comment exists and is not soft-deleted, then marks deleted_at timestamp.
+   */
+  async deleteComment(id: string): Promise<{ success: boolean; message: string }> {
+    await this.getCommentById(id);
+    await this.commentRepository.softDelete(id);
     return {
-      status: 'success',
-      message: `Comment ${commentId} has been soft-deleted.`,
+      success: true,
+      message: 'Comment soft-deleted successfully',
     };
   }
 
