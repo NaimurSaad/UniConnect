@@ -20,6 +20,7 @@ import {
   UpdateCommentDto,
   SetReactionDto,
   ReactPostDto,
+  QueryReactionDto,
   FeedQueryDto,
   FeedPaginationDto,
   CommentPaginationDto,
@@ -396,6 +397,55 @@ export class SocialFeedService {
   async setReaction(postId: string, dto: SetReactionDto | ReactPostDto, headerUserId?: string) {
     const userId = dto.user_id || headerUserId || SocialFeedService.DEFAULT_TEST_USER_ID;
     return this.reactToPost(postId, { user_id: userId, reaction_type: dto.reaction_type });
+  }
+
+  /**
+   * 12. Reaction Breakdown & User List Aggregations.
+   * Counts total reactions, groups by each ReactionType, and lists reactions (optionally filtered by type).
+   */
+  async getPostReactionsSummary(
+    postId: string,
+    type?: ReactionType,
+  ): Promise<{
+    post_id: string;
+    total: number;
+    breakdown: { like: number; love: number; support: number; insightful: number };
+    reactions: Reaction[];
+  }> {
+    // 1. Verify parent post exists
+    await this.getPostById(postId);
+
+    // 2. Fetch all reactions for this post
+    const allReactions = await this.reactionRepository.find({
+      where: { post_id: postId },
+      order: { created_at: 'DESC' },
+    });
+
+    // 3. Compute count breakdown
+    const breakdown = {
+      like: 0,
+      love: 0,
+      support: 0,
+      insightful: 0,
+    };
+
+    for (const r of allReactions) {
+      if (breakdown[r.reaction_type] !== undefined) {
+        breakdown[r.reaction_type]++;
+      }
+    }
+
+    // 4. Filter reaction list if type query is provided
+    const filteredReactions = type
+      ? allReactions.filter((r) => r.reaction_type === type)
+      : allReactions;
+
+    return {
+      post_id: postId,
+      total: allReactions.length,
+      breakdown,
+      reactions: filteredReactions,
+    };
   }
 
   /**

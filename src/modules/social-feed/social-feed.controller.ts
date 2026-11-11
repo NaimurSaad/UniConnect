@@ -28,6 +28,7 @@ import {
   UpdateCommentDto,
   SetReactionDto,
   ReactPostDto,
+  QueryReactionDto,
   FeedQueryDto,
   FeedPaginationDto,
   CommentPaginationDto,
@@ -246,6 +247,18 @@ export class SocialFeedController {
     @Body() reactDto: ReactPostDto,
   ) {
     return this.socialFeedService.reactToPost(postId, reactDto);
+  }
+
+  /**
+   * Get Reactions Summary & User List (with optional type filter):
+   * GET /feed/posts/:postId/reactions
+   */
+  @Get('posts/:postId/reactions')
+  getPostReactionsSummary(
+    @Param('postId', ParseUUIDPipe) postId: string,
+    @Query() queryDto: QueryReactionDto,
+  ) {
+    return this.socialFeedService.getPostReactionsSummary(postId, queryDto.type);
   }
 
   /**
