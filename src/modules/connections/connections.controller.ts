@@ -25,6 +25,45 @@ export class ConnectionsController {
   }
 
   /**
+   * Get Received Pending Connection Requests:
+   * GET /connections/pending
+   * Injects userId via @CurrentUser('id')
+   */
+  @Get('pending')
+  getPendingRequests(@CurrentUser('id') userId: string) {
+    if (!userId) {
+      throw new BadRequestException('User ID header (user-id) is required.');
+    }
+    return this.connectionsService.getPendingRequests(userId);
+  }
+
+  /**
+   * Get Sent Pending Connection Requests:
+   * GET /connections/sent
+   * Injects userId via @CurrentUser('id')
+   */
+  @Get('sent')
+  getSentRequests(@CurrentUser('id') userId: string) {
+    if (!userId) {
+      throw new BadRequestException('User ID header (user-id) is required.');
+    }
+    return this.connectionsService.getSentRequests(userId);
+  }
+
+  /**
+   * Get Accepted Connections (Friends List):
+   * GET /connections
+   * Injects userId via @CurrentUser('id')
+   */
+  @Get()
+  getAcceptedConnections(@CurrentUser('id') userId: string) {
+    if (!userId) {
+      throw new BadRequestException('User ID header (user-id) is required.');
+    }
+    return this.connectionsService.getAcceptedConnections(userId);
+  }
+
+  /**
    * Send Connection Request with Bidirectional Conflict Resolution:
    * POST /connections/request/:targetUserId
    * Injects requesterId via @CurrentUser('id') (supports JWT, 'user-id' header)

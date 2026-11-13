@@ -291,4 +291,175 @@ export class ConnectionsService {
 
     return !!blockRecord;
   }
+
+  /**
+   * Get Accepted Connections (Friends List):
+   * Queries accepted connections where the user is either the requester or the receiver.
+   * Ordered by updated_at DESC (most recently connected first).
+   * Strips sensitive fields like password_hash.
+   */
+  async getAcceptedConnections(userId: string): Promise<{ total: number; data: Connection[] }> {
+    const connections = await this.connectionRepository.find({
+      where: [
+        { requester_id: userId, status: ConnectionStatus.ACCEPTED },
+        { receiver_id: userId, status: ConnectionStatus.ACCEPTED },
+      ],
+      relations: {
+        requester: true,
+        receiver: true,
+      },
+      select: {
+        id: true,
+        requester_id: true,
+        receiver_id: true,
+        status: true,
+        created_at: true,
+        updated_at: true,
+        requester: {
+          id: true,
+          full_name: true,
+          email: true,
+          account_status: true,
+        },
+        receiver: {
+          id: true,
+          full_name: true,
+          email: true,
+          account_status: true,
+        },
+      },
+      order: {
+        updated_at: 'DESC',
+      },
+    });
+
+    // Sanitization: Ensure password_hash is never exposed
+    connections.forEach((conn) => {
+      if (conn.requester && (conn.requester as any).password_hash) {
+        delete (conn.requester as any).password_hash;
+      }
+      if (conn.receiver && (conn.receiver as any).password_hash) {
+        delete (conn.receiver as any).password_hash;
+      }
+    });
+
+    return {
+      total: connections.length,
+      data: connections,
+    };
+  }
+
+  /**
+   * Get Received Pending Connection Requests:
+   * Queries requests awaiting action where the user is the receiver.
+   * Ordered by created_at DESC (newest invitations first).
+   * Strips sensitive fields like password_hash.
+   */
+  async getPendingRequests(userId: string): Promise<{ total: number; data: Connection[] }> {
+    const requests = await this.connectionRepository.find({
+      where: {
+        receiver_id: userId,
+        status: ConnectionStatus.PENDING,
+      },
+      relations: {
+        requester: true,
+        receiver: true,
+      },
+      select: {
+        id: true,
+        requester_id: true,
+        receiver_id: true,
+        status: true,
+        created_at: true,
+        updated_at: true,
+        requester: {
+          id: true,
+          full_name: true,
+          email: true,
+          account_status: true,
+        },
+        receiver: {
+          id: true,
+          full_name: true,
+          email: true,
+          account_status: true,
+        },
+      },
+      order: {
+        created_at: 'DESC',
+      },
+    });
+
+    // Sanitization: Ensure password_hash is never exposed
+    requests.forEach((conn) => {
+      if (conn.requester && (conn.requester as any).password_hash) {
+        delete (conn.requester as any).password_hash;
+      }
+      if (conn.receiver && (conn.receiver as any).password_hash) {
+        delete (conn.receiver as any).password_hash;
+      }
+    });
+
+    return {
+      total: requests.length,
+      data: requests,
+    };
+  }
+
+  /**
+   * Get Sent Pending Connection Requests:
+   * Queries requests where the user is the requester and still pending.
+   * Ordered by created_at DESC (newest sent requests first).
+   * Strips sensitive fields like password_hash.
+   */
+  async getSentRequests(userId: string): Promise<{ total: number; data: Connection[] }> {
+    const requests = await this.connectionRepository.find({
+      where: {
+        requester_id: userId,
+        status: ConnectionStatus.PENDING,
+      },
+      relations: {
+        requester: true,
+        receiver: true,
+      },
+      select: {
+        id: true,
+        requester_id: true,
+        receiver_id: true,
+        status: true,
+        created_at: true,
+        updated_at: true,
+        requester: {
+          id: true,
+          full_name: true,
+          email: true,
+          account_status: true,
+        },
+        receiver: {
+          id: true,
+          full_name: true,
+          email: true,
+          account_status: true,
+        },
+      },
+      order: {
+        created_at: 'DESC',
+      },
+    });
+
+    // Sanitization: Ensure password_hash is never exposed
+    requests.forEach((conn) => {
+      if (conn.requester && (conn.requester as any).password_hash) {
+        delete (conn.requester as any).password_hash;
+      }
+      if (conn.receiver && (conn.receiver as any).password_hash) {
+        delete (conn.receiver as any).password_hash;
+      }
+    });
+
+    return {
+      total: requests.length,
+      data: requests,
+    };
+  }
 }
