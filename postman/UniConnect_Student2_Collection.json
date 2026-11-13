@@ -1,0 +1,743 @@
+{
+  "info": {
+    "_postman_id": "a9d72f10-53bc-4de2-b258-761391745422",
+    "name": "UniConnect - Student 2 (Nizam Uddin Shuvo, 23-51568-2) Collection",
+    "description": "Comprehensive API collection for Student 2 covering SocialFeedModule, ConnectionsModule, and NotificationsModule.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000",
+      "type": "string"
+    },
+    {
+      "key": "userA",
+      "value": "c2d3e4f5-a1b2-4c3d-8e9f-0123456789ab",
+      "type": "string"
+    },
+    {
+      "key": "userB",
+      "value": "d3e4f5a6-b2c3-4d4e-9f0a-1234567890bc",
+      "type": "string"
+    },
+    {
+      "key": "postId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "commentId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "connectionId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "notificationId",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "1. Social Feed",
+      "item": [
+        {
+          "name": "Health Check",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/feed/health-check",
+              "host": ["{{baseUrl}}"],
+              "path": ["feed", "health-check"]
+            }
+          }
+        },
+        {
+          "name": "Upload Media",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "user-id",
+                "value": "{{userA}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": []
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/feed/upload",
+              "host": ["{{baseUrl}}"],
+              "path": ["feed", "upload"]
+            }
+          }
+        },
+        {
+          "name": "Create Post",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const json = pm.response.json();",
+                  "if (json && json.id) {",
+                  "    pm.collectionVariables.set('postId', json.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "user-id",
+                "value": "{{userA}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"content\": \"Hello UniConnect! This is Nizam Uddin Shuvo posting on the academic feed.\",\n  \"visibility\": \"public\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/feed/posts",
+              "host": ["{{baseUrl}}"],
+              "path": ["feed", "posts"]
+            }
+          }
+        },
+        {
+          "name": "Empty Post 400 Test",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "user-id",
+                "value": "{{userA}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"content\": \"\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/feed/posts",
+              "host": ["{{baseUrl}}"],
+              "path": ["feed", "posts"]
+            }
+          }
+        },
+        {
+          "name": "Get Feed",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "user-id",
+                "value": "{{userA}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/feed/posts?limit=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["feed", "posts"],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Single Post",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/feed/posts/{{postId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["feed", "posts", "{{postId}}"]
+            }
+          }
+        },
+        {
+          "name": "Update Post",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "user-id",
+                "value": "{{userA}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"content\": \"Updated research post content with more details.\",\n  \"visibility\": \"connections\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/feed/posts/{{postId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["feed", "posts", "{{postId}}"]
+            }
+          }
+        },
+        {
+          "name": "Delete Post",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "user-id",
+                "value": "{{userA}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/feed/posts/{{postId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["feed", "posts", "{{postId}}"]
+            }
+          }
+        },
+        {
+          "name": "Add Comment",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const json = pm.response.json();",
+                  "if (json && json.id) {",
+                  "    pm.collectionVariables.set('commentId', json.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "user-id",
+                "value": "{{userB}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"content\": \"Great update, Nizam! Looking forward to collaborating on this.\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/feed/posts/{{postId}}/comments",
+              "host": ["{{baseUrl}}"],
+              "path": ["feed", "posts", "{{postId}}", "comments"]
+            }
+          }
+        },
+        {
+          "name": "Get Comments",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/feed/posts/{{postId}}/comments?page=1&limit=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["feed", "posts", "{{postId}}", "comments"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Update Comment",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "user-id",
+                "value": "{{userB}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"content\": \"Updated comment with additional academic references.\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/feed/comments/{{commentId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["feed", "comments", "{{commentId}}"]
+            }
+          }
+        },
+        {
+          "name": "Delete Comment",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "user-id",
+                "value": "{{userB}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/feed/comments/{{commentId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["feed", "comments", "{{commentId}}"]
+            }
+          }
+        },
+        {
+          "name": "Toggle Reaction",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "user-id",
+                "value": "{{userB}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"user_id\": \"{{userB}}\",\n  \"reaction_type\": \"like\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/feed/posts/{{postId}}/reactions",
+              "host": ["{{baseUrl}}"],
+              "path": ["feed", "posts", "{{postId}}", "reactions"]
+            }
+          }
+        },
+        {
+          "name": "Get Reactions Summary",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/feed/posts/{{postId}}/reactions",
+              "host": ["{{baseUrl}}"],
+              "path": ["feed", "posts", "{{postId}}", "reactions"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "2. Connections",
+      "item": [
+        {
+          "name": "Health Check",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/connections/health-check",
+              "host": ["{{baseUrl}}"],
+              "path": ["connections", "health-check"]
+            }
+          }
+        },
+        {
+          "name": "Send Connection Request",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const json = pm.response.json();",
+                  "if (json && json.id) {",
+                  "    pm.collectionVariables.set('connectionId', json.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "user-id",
+                "value": "{{userA}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/connections/request/{{userB}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["connections", "request", "{{userB}}"]
+            }
+          }
+        },
+        {
+          "name": "Duplicate/Reverse Request 409 Test",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "user-id",
+                "value": "{{userB}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/connections/request/{{userA}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["connections", "request", "{{userA}}"]
+            }
+          }
+        },
+        {
+          "name": "Accept Request",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "user-id",
+                "value": "{{userB}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/connections/{{connectionId}}/accept",
+              "host": ["{{baseUrl}}"],
+              "path": ["connections", "{{connectionId}}", "accept"]
+            }
+          }
+        },
+        {
+          "name": "Reject Request",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "user-id",
+                "value": "{{userB}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/connections/{{connectionId}}/reject",
+              "host": ["{{baseUrl}}"],
+              "path": ["connections", "{{connectionId}}", "reject"]
+            }
+          }
+        },
+        {
+          "name": "Cancel Request",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "user-id",
+                "value": "{{userA}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/connections/{{connectionId}}/cancel",
+              "host": ["{{baseUrl}}"],
+              "path": ["connections", "{{connectionId}}", "cancel"]
+            }
+          }
+        },
+        {
+          "name": "Block User",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "user-id",
+                "value": "{{userA}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/connections/block/{{userB}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["connections", "block", "{{userB}}"]
+            }
+          }
+        },
+        {
+          "name": "Unblock User",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "user-id",
+                "value": "{{userA}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/connections/unblock/{{userB}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["connections", "unblock", "{{userB}}"]
+            }
+          }
+        },
+        {
+          "name": "Get Accepted Connections",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "user-id",
+                "value": "{{userA}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/connections",
+              "host": ["{{baseUrl}}"],
+              "path": ["connections"]
+            }
+          }
+        },
+        {
+          "name": "Get Pending Requests",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "user-id",
+                "value": "{{userB}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/connections/pending",
+              "host": ["{{baseUrl}}"],
+              "path": ["connections", "pending"]
+            }
+          }
+        },
+        {
+          "name": "Get Sent Requests",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "user-id",
+                "value": "{{userA}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/connections/sent",
+              "host": ["{{baseUrl}}"],
+              "path": ["connections", "sent"]
+            }
+          }
+        },
+        {
+          "name": "Check Connection Status",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "user-id",
+                "value": "{{userA}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/connections/status/{{userB}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["connections", "status", "{{userB}}"]
+            }
+          }
+        },
+        {
+          "name": "Remove Connection",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "user-id",
+                "value": "{{userA}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/connections/{{connectionId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["connections", "{{connectionId}}"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "3. Notifications",
+      "item": [
+        {
+          "name": "Health Check",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/notifications/health-check",
+              "host": ["{{baseUrl}}"],
+              "path": ["notifications", "health-check"]
+            }
+          }
+        },
+        {
+          "name": "Get Unread Count",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "user-id",
+                "value": "{{userA}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/notifications/unread-count",
+              "host": ["{{baseUrl}}"],
+              "path": ["notifications", "unread-count"]
+            }
+          }
+        },
+        {
+          "name": "Get Notifications List",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const json = pm.response.json();",
+                  "if (json && json.data && json.data.length > 0) {",
+                  "    pm.collectionVariables.set('notificationId', json.data[0].id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "user-id",
+                "value": "{{userA}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/notifications?page=1&limit=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["notifications"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Mark One As Read",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "user-id",
+                "value": "{{userA}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/notifications/{{notificationId}}/read",
+              "host": ["{{baseUrl}}"],
+              "path": ["notifications", "{{notificationId}}", "read"]
+            }
+          }
+        },
+        {
+          "name": "Mark All As Read",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "user-id",
+                "value": "{{userA}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/notifications/read-all",
+              "host": ["{{baseUrl}}"],
+              "path": ["notifications", "read-all"]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
+
