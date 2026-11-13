@@ -462,4 +462,56 @@ export class ConnectionsService {
       data: requests,
     };
   }
+
+  /**
+   * Check connection status between two users:
+   * Returns current relationship status ('none' | 'pending' | 'accepted' | 'rejected' | 'blocked')
+   */
+  async getConnectionStatus(
+    userId: string,
+    targetUserId: string,
+  ): Promise<{ status: string; connection: Connection | null }> {
+    const existing = await this.connectionRepository.findOne({
+      where: [
+        { requester_id: userId, receiver_id: targetUserId },
+        { requester_id: targetUserId, receiver_id: userId },
+      ],
+    });
+
+    return {
+      status: existing ? existing.status : 'none',
+      connection: existing || null,
+    };
+  }
+
+  /**
+   * Remove Connection (Unfriend):
+   * Either party of an ACCEPTED connection can remove the friendship.
+   */
+  async removeConnection(
+    connectionId: string,
+    userId: string,
+  ): Promise<{ success: boolean; message: string }> {
+    const connection = await this.connectionRepository.findOne({
+      where: { id: connectionId },
+    });
+
+    if (!connection) {
+      throw new NotFoundException('Connection not found.');
+    }
+
+    if (connection.requester_id !== userId && connection.receiver_id !== userId) {
+      throw new ForbiddenException('You are not part of this connection.');
+    }
+
+    if (connection.status !== ConnectionStatus.ACCEPTED) {
+      throw new BadRequestException('Only accepted connections can be removed.');
+    }
+
+    await this.connectionRepository.remove(connection);
+    return {
+      success: true,
+      message: 'Connection removed successfully.',
+    };
+  }
 }
