@@ -1,15 +1,4 @@
-import {
-  Entity,
-  PrimaryGeneratedColumn,
-  Column,
-  ManyToOne,
-  CreateDateColumn,
-  UpdateDateColumn,
-  JoinColumn,
-  Index,
-} from "typeorm";
-import { User } from "../../user/entities/user.entity";
-import { JobPost } from "./job-post.entity";
+import {Column,Entity,PrimaryGeneratedColumn,CreateDateColumn,UpdateDateColumn} from "typeorm";
 
 export enum ApplicationStatus {
   SUBMITTED = "submitted",
@@ -20,47 +9,40 @@ export enum ApplicationStatus {
   WITHDRAWN = "withdrawn",
 }
 
-@Entity({ name: "job_applications" })
-@Index(["jobPostId", "applicantId"], { unique: true })
+
+@Entity({name:"job_application"}) 
+
 export class JobApplication {
-  @PrimaryGeneratedColumn("uuid")
-  id!: string;
 
-  @Column({ name: "job_post_id", type: "uuid" })
-  jobPostId!: string;
+  @PrimaryGeneratedColumn ("uuid")
+  id! : string;
 
-  @ManyToOne(() => JobPost, (job) => job.applications, { onDelete: "CASCADE" })
-  @JoinColumn({ name: "job_post_id" })
-  jobPost!: JobPost;
+  @Column ({name : "job_post_id" , type: "uuid"})
+  jobPostId! : string;
 
-  @Column({ name: "applicant_id", type: "uuid" })
-  applicantId!: string;
-
-  @ManyToOne(() => User, { onDelete: "RESTRICT" })
-  @JoinColumn({ name: "applicant_id" })
-  applicant!: User;
+  @Column ({name : "applicant_id" , type: "uuid"})
+  applicantId ! : string ;
 
   @Column({ name: "cover_letter", type: "text", nullable: true })
   coverLetter!: string | null;
 
-  @Column({
-    name: "resume_url",
-    type: "varchar",
-    length: 500,
-    nullable: true,
-  })
+  @Column({ name: "resume_url", type: "varchar", length: 500, nullable: true })
   resumeUrl!: string | null;
 
-  @Column({
-    type: "enum",
-    enum: ApplicationStatus,
-    default: ApplicationStatus.SUBMITTED,
+  @Column({ 
+    type: "enum", 
+    enum: ApplicationStatus, 
+    default: ApplicationStatus.SUBMITTED 
   })
-  status!: ApplicationStatus;
 
   @CreateDateColumn({ name: "applied_at", type: "timestamp" })
   appliedAt!: Date;
 
   @UpdateDateColumn({ name: "updated_at", type: "timestamp" })
   updatedAt!: Date;
+
+
+
+
 }
+

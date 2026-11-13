@@ -1,15 +1,7 @@
 import {
-  Entity,
-  PrimaryGeneratedColumn,
-  Column,
-  ManyToOne,
-  OneToMany,
-  CreateDateColumn,
-  UpdateDateColumn,
-  JoinColumn,
-  Index,
+  Entity, PrimaryGeneratedColumn,Column,ManyToOne,OneToMany, CreateDateColumn,UpdateDateColumn,JoinColumn,Index,
 } from "typeorm";
-import { User } from "../../user/entities/user.entity";
+import { User } from "../../users/entities/user.entity";
 import { JobApplication } from "./job-application.entity";
 
 export enum JobType {
