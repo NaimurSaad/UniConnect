@@ -1,8 +1,14 @@
-import { Injectable, Logger } from '@nestjs/common';
+import {
+  Injectable,
+  Logger,
+  NotFoundException,
+  ForbiddenException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, IsNull } from 'typeorm';
 import { Notification } from './entities/notification.entity';
 import { CreateNotificationDto } from './dto/create-notification.dto';
+import { NotificationPaginationDto } from './dto/notification-pagination.dto';
 import { User } from '../users/entities/user.entity';
 
 @Injectable()
@@ -77,6 +83,95 @@ export class NotificationsService {
     });
 
     return await this.notificationRepository.save(notification);
+  }
+
+  /**
+   * 1. Get paginated notifications for a specific user, ordered latest first.
+   */
+  async getUserNotifications(
+    userId: string,
+    paginationDto: NotificationPaginationDto,
+  ): Promise<{
+    data: Notification[];
+    total: number;
+    page: number;
+    limit: number;
+    total_pages: number;
+  }> {
+    const { page = 1, limit = 10 } = paginationDto;
+    const skip = (page - 1) * limit;
+
+    const [data, total] = await this.notificationRepository.findAndCount({
+      where: { user_id: userId },
+      order: { created_at: 'DESC' },
+      skip,
+      take: limit,
+    });
+
+    return {
+      data,
+      total,
+      page,
+      limit,
+      total_pages: Math.ceil(total / limit) || 1,
+    };
+  }
+
+  /**
+   * 2. Count total unread notifications for a specific user.
+   */
+  async getUnreadCount(userId: string): Promise<{ unread_count: number }> {
+    const count = await this.notificationRepository.count({
+      where: {
+        user_id: userId,
+        read_at: IsNull(),
+      },
+    });
+
+    return { unread_count: count };
+  }
+
+  /**
+   * 3. Mark a single notification as read by ID.
+   * Verifies that the notification exists and belongs to the requesting user.
+   */
+  async markAsRead(notificationId: string, userId: string): Promise<Notification> {
+    const notification = await this.notificationRepository.findOne({
+      where: { id: notificationId },
+    });
+
+    if (!notification) {
+      throw new NotFoundException('Notification not found.');
+    }
+
+    if (notification.user_id !== userId) {
+      throw new ForbiddenException('You are not authorized to update this notification.');
+    }
+
+    if (!notification.read_at) {
+      notification.read_at = new Date();
+      return await this.notificationRepository.save(notification);
+    }
+
+    return notification;
+  }
+
+  /**
+   * 4. Batch update all unread notifications for a user to read.
+   */
+  async markAllAsRead(
+    userId: string,
+  ): Promise<{ success: boolean; message: string; updated_count: number }> {
+    const result = await this.notificationRepository.update(
+      { user_id: userId, read_at: IsNull() },
+      { read_at: new Date() },
+    );
+
+    return {
+      success: true,
+      message: 'All notifications marked as read.',
+      updated_count: result.affected || 0,
+    };
   }
 }
 
