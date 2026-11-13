@@ -3,6 +3,8 @@ import {
   Logger,
   BadRequestException,
   ConflictException,
+  NotFoundException,
+  ForbiddenException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -122,5 +124,86 @@ export class ConnectionsService {
     });
 
     return await this.connectionRepository.save(newConnection);
+  }
+
+  /**
+   * Accept Connection Request:
+   * Only the receiver can accept a connection request in PENDING state.
+   */
+  async acceptRequest(connectionId: string, userId: string): Promise<Connection> {
+    const connection = await this.connectionRepository.findOne({
+      where: { id: connectionId },
+    });
+
+    if (!connection) {
+      throw new NotFoundException('Connection request not found.');
+    }
+
+    if (connection.receiver_id !== userId) {
+      throw new ForbiddenException('Only the receiver can accept this connection request.');
+    }
+
+    if (connection.status !== ConnectionStatus.PENDING) {
+      throw new BadRequestException('Only pending connection requests can be accepted.');
+    }
+
+    connection.status = ConnectionStatus.ACCEPTED;
+    return await this.connectionRepository.save(connection);
+  }
+
+  /**
+   * Reject Connection Request:
+   * Only the receiver can reject a connection request in PENDING state.
+   */
+  async rejectRequest(connectionId: string, userId: string): Promise<Connection> {
+    const connection = await this.connectionRepository.findOne({
+      where: { id: connectionId },
+    });
+
+    if (!connection) {
+      throw new NotFoundException('Connection request not found.');
+    }
+
+    if (connection.receiver_id !== userId) {
+      throw new ForbiddenException('Only the receiver can reject this connection request.');
+    }
+
+    if (connection.status !== ConnectionStatus.PENDING) {
+      throw new BadRequestException('Only pending connection requests can be rejected.');
+    }
+
+    connection.status = ConnectionStatus.REJECTED;
+    return await this.connectionRepository.save(connection);
+  }
+
+  /**
+   * Cancel Connection Request:
+   * Only the requester can cancel their own sent request while in PENDING state.
+   */
+  async cancelRequest(
+    connectionId: string,
+    userId: string,
+  ): Promise<{ success: boolean; message: string }> {
+    const connection = await this.connectionRepository.findOne({
+      where: { id: connectionId },
+    });
+
+    if (!connection) {
+      throw new NotFoundException('Connection request not found.');
+    }
+
+    if (connection.requester_id !== userId) {
+      throw new ForbiddenException('Only the requester can cancel this connection request.');
+    }
+
+    if (connection.status !== ConnectionStatus.PENDING) {
+      throw new BadRequestException('Only pending connection requests can be cancelled.');
+    }
+
+    await this.connectionRepository.remove(connection);
+    return {
+      success: true,
+      message: 'Connection request cancelled successfully.',
+    };
   }
 }

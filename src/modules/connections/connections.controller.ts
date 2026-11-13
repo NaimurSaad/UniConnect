@@ -2,6 +2,8 @@ import {
   Controller,
   Get,
   Post,
+  Patch,
+  Delete,
   Param,
   ParseUUIDPipe,
   BadRequestException,
@@ -36,5 +38,53 @@ export class ConnectionsController {
       throw new BadRequestException('User ID header (user-id) is required.');
     }
     return this.connectionsService.sendRequest(requesterId, targetUserId);
+  }
+
+  /**
+   * Accept Connection Request:
+   * PATCH /connections/:id/accept
+   * Only the receiver can accept.
+   */
+  @Patch(':id/accept')
+  acceptRequest(
+    @CurrentUser('id') userId: string,
+    @Param('id', ParseUUIDPipe) id: string,
+  ) {
+    if (!userId) {
+      throw new BadRequestException('User ID header (user-id) is required.');
+    }
+    return this.connectionsService.acceptRequest(id, userId);
+  }
+
+  /**
+   * Reject Connection Request:
+   * PATCH /connections/:id/reject
+   * Only the receiver can reject.
+   */
+  @Patch(':id/reject')
+  rejectRequest(
+    @CurrentUser('id') userId: string,
+    @Param('id', ParseUUIDPipe) id: string,
+  ) {
+    if (!userId) {
+      throw new BadRequestException('User ID header (user-id) is required.');
+    }
+    return this.connectionsService.rejectRequest(id, userId);
+  }
+
+  /**
+   * Cancel Connection Request:
+   * DELETE /connections/:id/cancel
+   * Only the requester can cancel.
+   */
+  @Delete(':id/cancel')
+  cancelRequest(
+    @CurrentUser('id') userId: string,
+    @Param('id', ParseUUIDPipe) id: string,
+  ) {
+    if (!userId) {
+      throw new BadRequestException('User ID header (user-id) is required.');
+    }
+    return this.connectionsService.cancelRequest(id, userId);
   }
 }
