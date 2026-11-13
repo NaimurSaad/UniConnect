@@ -8,6 +8,7 @@ import { BullModule } from "@nestjs/bull";
 import { UsersModule } from "./modules/users/users.module";
 import { SocialFeedModule } from "./modules/social-feed/social-feed.module";
 import { ConnectionsModule } from "./modules/connections/connections.module";
+import { NotificationsModule } from "./modules/notifications/notifications.module";
 
 @Module({
   imports: [
@@ -27,6 +28,7 @@ import { ConnectionsModule } from "./modules/connections/connections.module";
     UsersModule,
     SocialFeedModule,
     ConnectionsModule,
+    NotificationsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
