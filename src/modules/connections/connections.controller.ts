@@ -87,4 +87,36 @@ export class ConnectionsController {
     }
     return this.connectionsService.cancelRequest(id, userId);
   }
+
+  /**
+   * Block User:
+   * POST /connections/block/:targetUserId
+   * Injects actorId via @CurrentUser('id')
+   */
+  @Post('block/:targetUserId')
+  blockUser(
+    @CurrentUser('id') actorId: string,
+    @Param('targetUserId', ParseUUIDPipe) targetUserId: string,
+  ) {
+    if (!actorId) {
+      throw new BadRequestException('User ID header (user-id) is required.');
+    }
+    return this.connectionsService.blockUser(actorId, targetUserId);
+  }
+
+  /**
+   * Unblock User:
+   * DELETE /connections/unblock/:targetUserId
+   * Injects actorId via @CurrentUser('id')
+   */
+  @Delete('unblock/:targetUserId')
+  unblockUser(
+    @CurrentUser('id') actorId: string,
+    @Param('targetUserId', ParseUUIDPipe) targetUserId: string,
+  ) {
+    if (!actorId) {
+      throw new BadRequestException('User ID header (user-id) is required.');
+    }
+    return this.connectionsService.unblockUser(actorId, targetUserId);
+  }
 }

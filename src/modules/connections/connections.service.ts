@@ -206,4 +206,89 @@ export class ConnectionsService {
       message: 'Connection request cancelled successfully.',
     };
   }
+
+  /**
+   * Block User:
+   * Sets or overrides any relationship to BLOCKED status.
+   * Actor becomes requester_id, target becomes receiver_id.
+   */
+  async blockUser(actorId: string, targetUserId: string): Promise<Connection> {
+    if (actorId === targetUserId) {
+      throw new BadRequestException('You cannot block yourself.');
+    }
+
+    await this.ensureUserExists(actorId);
+    await this.ensureUserExists(targetUserId);
+
+    // Search in either direction
+    const existing = await this.connectionRepository.findOne({
+      where: [
+        { requester_id: actorId, receiver_id: targetUserId },
+        { requester_id: targetUserId, receiver_id: actorId },
+      ],
+    });
+
+    if (existing) {
+      if (
+        existing.status === ConnectionStatus.BLOCKED &&
+        existing.requester_id === actorId
+      ) {
+        throw new ConflictException('You have already blocked this user.');
+      }
+
+      existing.requester_id = actorId;
+      existing.receiver_id = targetUserId;
+      existing.status = ConnectionStatus.BLOCKED;
+      return await this.connectionRepository.save(existing);
+    }
+
+    const newBlock = this.connectionRepository.create({
+      requester_id: actorId,
+      receiver_id: targetUserId,
+      status: ConnectionStatus.BLOCKED,
+    });
+
+    return await this.connectionRepository.save(newBlock);
+  }
+
+  /**
+   * Unblock User:
+   * Only the user who placed the block (requester_id) can unblock.
+   */
+  async unblockUser(
+    actorId: string,
+    targetUserId: string,
+  ): Promise<{ success: boolean; message: string }> {
+    const connection = await this.connectionRepository.findOne({
+      where: {
+        requester_id: actorId,
+        receiver_id: targetUserId,
+        status: ConnectionStatus.BLOCKED,
+      },
+    });
+
+    if (!connection) {
+      throw new NotFoundException('No active block record found for this user.');
+    }
+
+    await this.connectionRepository.remove(connection);
+    return {
+      success: true,
+      message: 'User unblocked successfully.',
+    };
+  }
+
+  /**
+   * Check if two users have a block relationship in either direction.
+   */
+  async isBlocked(userA: string, userB: string): Promise<boolean> {
+    const blockRecord = await this.connectionRepository.findOne({
+      where: [
+        { requester_id: userA, receiver_id: userB, status: ConnectionStatus.BLOCKED },
+        { requester_id: userB, receiver_id: userA, status: ConnectionStatus.BLOCKED },
+      ],
+    });
+
+    return !!blockRecord;
+  }
 }
