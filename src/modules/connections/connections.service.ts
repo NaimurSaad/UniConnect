@@ -1,7 +1,13 @@
-import { Injectable, Logger } from '@nestjs/common';
+import {
+  Injectable,
+  Logger,
+  BadRequestException,
+  ConflictException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Connection } from './entities/connection.entity';
+import { ConnectionStatus } from './enums/connection-status.enum';
 import { User } from '../users/entities/user.entity';
 
 @Injectable()
@@ -59,5 +65,62 @@ export class ConnectionsService {
       },
     };
   }
-}
 
+  /**
+   * Send Connection Request with Bidirectional Conflict Resolution:
+   * Handles self-connection prevention, existing requests in either direction,
+   * re-requesting after rejection, and new connection creation.
+   */
+  async sendRequest(requesterId: string, targetUserId: string): Promise<Connection> {
+    // 1. Prevent connecting to oneself
+    if (requesterId === targetUserId) {
+      throw new BadRequestException('You cannot send a connection request to yourself.');
+    }
+
+    // 2. Ensure both users exist in DB to satisfy foreign keys during local testing
+    await this.ensureUserExists(requesterId);
+    await this.ensureUserExists(targetUserId);
+
+    // 3. Bidirectional search: check for ANY existing connection record between the two users
+    const existing = await this.connectionRepository.findOne({
+      where: [
+        { requester_id: requesterId, receiver_id: targetUserId },
+        { requester_id: targetUserId, receiver_id: requesterId },
+      ],
+    });
+
+    // 4. Handle existing record based on status
+    if (existing) {
+      if (existing.status === ConnectionStatus.PENDING) {
+        throw new ConflictException(
+          'A pending connection request already exists between these users.',
+        );
+      }
+
+      if (existing.status === ConnectionStatus.ACCEPTED) {
+        throw new ConflictException('You are already connected with this user.');
+      }
+
+      if (existing.status === ConnectionStatus.BLOCKED) {
+        throw new BadRequestException('Unable to send connection request.');
+      }
+
+      if (existing.status === ConnectionStatus.REJECTED) {
+        // If previously rejected, allow re-requesting: flip direction to current requester & set back to PENDING
+        existing.requester_id = requesterId;
+        existing.receiver_id = targetUserId;
+        existing.status = ConnectionStatus.PENDING;
+        return await this.connectionRepository.save(existing);
+      }
+    }
+
+    // 5. If no record exists, create a new pending connection
+    const newConnection = this.connectionRepository.create({
+      requester_id: requesterId,
+      receiver_id: targetUserId,
+      status: ConnectionStatus.PENDING,
+    });
+
+    return await this.connectionRepository.save(newConnection);
+  }
+}
