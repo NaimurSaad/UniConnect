@@ -5,6 +5,7 @@ import { AppController } from "@/src/app.controller";
 import { AppService } from "@/src/app.service";
 import global_config from "@/config/global_config";
 import { BullModule } from "@nestjs/bull";
+import { EventEmitterModule } from "@nestjs/event-emitter";
 import { UsersModule } from "./modules/users/users.module";
 import { SocialFeedModule } from "./modules/social-feed/social-feed.module";
 import { ConnectionsModule } from "./modules/connections/connections.module";
@@ -12,6 +13,7 @@ import { NotificationsModule } from "./modules/notifications/notifications.modul
 
 @Module({
   imports: [
+    EventEmitterModule.forRoot(),
     PostgresDatabaseProviderModule,
 
     ConfigModule.forRoot({

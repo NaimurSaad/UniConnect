@@ -25,6 +25,8 @@ import {
   FeedPaginationDto,
   CommentPaginationDto,
 } from './dto';
+import { EventEmitter2 } from '@nestjs/event-emitter';
+import { PostCommentedEvent, PostReactedEvent } from '../../common/events/domain-events';
 
 @Injectable()
 export class SocialFeedService {
@@ -43,6 +45,7 @@ export class SocialFeedService {
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
     private readonly dataSource: DataSource,
+    private readonly eventEmitter: EventEmitter2,
   ) { }
 
   /**
@@ -253,7 +256,7 @@ export class SocialFeedService {
     headerUserId?: string,
   ): Promise<Comment> {
     // 1. Check parent post existence (excludes soft-deleted posts)
-    await this.getPostById(postId);
+    const post = await this.getPostById(postId);
 
     const authorId = createCommentDto.author_id || headerUserId;
     // Ensure author exists in DB to satisfy foreign key constraints during testing
@@ -266,7 +269,16 @@ export class SocialFeedService {
       content: createCommentDto.content,
     });
 
-    return await this.commentRepository.save(comment);
+    const savedComment = await this.commentRepository.save(comment);
+
+    // 3. Emit post.commented event
+    this.eventEmitter.emit(
+      'post.commented',
+      new PostCommentedEvent(post.id, post.author_id, savedComment.id, savedComment.author_id),
+    );
+    console.log('[Event Emitted] post.commented');
+
+    return savedComment;
   }
 
   /**
@@ -361,11 +373,12 @@ export class SocialFeedService {
     headerUserId?: string,
   ): Promise<{ action: 'added' | 'updated' | 'removed'; reaction?: Reaction; message?: string }> {
     // 1. Verify parent post exists
-    await this.getPostById(postId);
+    const post = await this.getPostById(postId);
 
     const userId = reactDto.user_id || headerUserId;
     // Ensure user exists in DB to satisfy foreign key constraints during local testing
     const resolvedUserId = await this.ensureUserExists(userId);
+    const reactorId = reactDto.user_id || resolvedUserId;
 
     // 2. Check for existing reaction
     const existingReaction = await this.reactionRepository.findOne({
@@ -383,6 +396,11 @@ export class SocialFeedService {
         reaction_type: reactDto.reaction_type,
       });
       const saved = await this.reactionRepository.save(newReaction);
+      this.eventEmitter.emit(
+        'post.reacted',
+        new PostReactedEvent(post.id, post.author_id, reactorId, reactDto.reaction_type),
+      );
+      console.log('[Event Emitted] post.reacted');
       return { action: 'added', reaction: saved };
     }
 
@@ -395,6 +413,11 @@ export class SocialFeedService {
     // 5. Case C: Different reaction -> Update
     existingReaction.reaction_type = reactDto.reaction_type;
     const updated = await this.reactionRepository.save(existingReaction);
+    this.eventEmitter.emit(
+      'post.reacted',
+      new PostReactedEvent(post.id, post.author_id, reactorId, reactDto.reaction_type),
+    );
+    console.log('[Event Emitted] post.reacted');
     return { action: 'updated', reaction: updated };
   }
 

@@ -11,6 +11,11 @@ import { Repository } from 'typeorm';
 import { Connection } from './entities/connection.entity';
 import { ConnectionStatus } from './enums/connection-status.enum';
 import { User } from '../users/entities/user.entity';
+import { EventEmitter2 } from '@nestjs/event-emitter';
+import {
+  ConnectionRequestedEvent,
+  ConnectionAcceptedEvent,
+} from '../../common/events/domain-events';
 
 @Injectable()
 export class ConnectionsService {
@@ -24,6 +29,7 @@ export class ConnectionsService {
     private readonly connectionRepository: Repository<Connection>,
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
+    private readonly eventEmitter: EventEmitter2,
   ) {}
 
   /**
@@ -112,7 +118,13 @@ export class ConnectionsService {
         existing.requester_id = requesterId;
         existing.receiver_id = targetUserId;
         existing.status = ConnectionStatus.PENDING;
-        return await this.connectionRepository.save(existing);
+        const saved = await this.connectionRepository.save(existing);
+        this.eventEmitter.emit(
+          'connection.requested',
+          new ConnectionRequestedEvent(saved.id, saved.requester_id, saved.receiver_id),
+        );
+        console.log('[Event Emitted] connection.requested');
+        return saved;
       }
     }
 
@@ -123,7 +135,13 @@ export class ConnectionsService {
       status: ConnectionStatus.PENDING,
     });
 
-    return await this.connectionRepository.save(newConnection);
+    const saved = await this.connectionRepository.save(newConnection);
+    this.eventEmitter.emit(
+      'connection.requested',
+      new ConnectionRequestedEvent(saved.id, saved.requester_id, saved.receiver_id),
+    );
+    console.log('[Event Emitted] connection.requested');
+    return saved;
   }
 
   /**
@@ -148,7 +166,13 @@ export class ConnectionsService {
     }
 
     connection.status = ConnectionStatus.ACCEPTED;
-    return await this.connectionRepository.save(connection);
+    const saved = await this.connectionRepository.save(connection);
+    this.eventEmitter.emit(
+      'connection.accepted',
+      new ConnectionAcceptedEvent(saved.id, saved.requester_id, saved.receiver_id),
+    );
+    console.log('[Event Emitted] connection.accepted');
+    return saved;
   }
 
   /**
