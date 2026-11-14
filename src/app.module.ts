@@ -11,6 +11,7 @@ import { AuthModule } from '@/modules/auth/auth.module';
 import { AffiliationModule } from '@/modules/affiliation/affiliation.module';
 import { ModerationModule } from '@/modules/moderation/moderation.module';
 import { JobsModule } from './modules/jobs/jobs.module';
+import { AcademicResourcesModule } from './modules/academic-resources/academic-resources.module';
 
 
 @Module({
@@ -22,6 +23,7 @@ import { JobsModule } from './modules/jobs/jobs.module';
     AffiliationModule,
     ModerationModule,
     JobsModule,
+    AcademicResourcesModule,
 
     ConfigModule.forRoot({
       isGlobal: true,

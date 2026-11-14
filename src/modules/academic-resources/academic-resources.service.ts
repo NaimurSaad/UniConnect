@@ -18,6 +18,7 @@ async getResources(search?: string, course?: string){
         if(search) qb.andWhere("(note.title ILIKE :s OR note.description ILIKE :s)", { s: `%${search}%` });
         if(course) qb.andWhere("note.course ILIKE :c", { c: `%${course}%` });
         
+        
         qb.orderBy("note.created_at", "DESC");
         const notes = await qb.getMany();
         return notes;
