@@ -2,7 +2,7 @@ import { MigrationInterface, QueryRunner, Table, TableForeignKey } from 'typeorm
 
 export class CreateBloodDonationTables1794636000000 implements MigrationInterface {
     public async up(queryRunner: QueryRunner): Promise<void> {
-        // 1. blood_requests table
+        
         await queryRunner.createTable(
             new Table({
                 name: 'blood_requests',
