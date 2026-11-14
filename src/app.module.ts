@@ -11,6 +11,7 @@ import { AuthModule } from '@/modules/auth/auth.module';
 import { AffiliationModule } from '@/modules/affiliation/affiliation.module';
 import { ModerationModule } from '@/modules/moderation/moderation.module';
 import { BloodDonationModule } from './modules/blood-donation/blood-donation.module';
+import { LostAndFoundModule } from './modules/lost-and-found/lost-and-found.module';
 
 
 @Module({
@@ -22,6 +23,7 @@ import { BloodDonationModule } from './modules/blood-donation/blood-donation.mod
     AffiliationModule,
     ModerationModule,
     BloodDonationModule,
+    LostAndFoundModule,
 
     ConfigModule.forRoot({
       isGlobal: true,
