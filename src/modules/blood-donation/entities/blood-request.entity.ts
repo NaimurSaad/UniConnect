@@ -7,7 +7,7 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
-import { User } from '../../user/entities/user.entity'; // আপনার User এনটিটির পাথ ঠিক করে নিন
+import { User } from '../../user/entities/user.entity';
 
 export enum BloodGroup {
   A_POS = 'A+',
