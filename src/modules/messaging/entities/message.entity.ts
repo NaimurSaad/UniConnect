@@ -41,8 +41,7 @@ export class Message {
 
   @Column({ name: 'deleted_at', type: 'timestamp', nullable: true })
   deletedAt!: Date | null;
-
-    // 👇 এই অংশটুকু নতুন যোগ করুন (শেষ প্রপার্টির নিচে)
+  
   @OneToMany(() => MessageAttachment, (attachment) => attachment.message)
   attachments!: MessageAttachment[];
 }
