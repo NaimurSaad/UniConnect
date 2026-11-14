@@ -12,6 +12,7 @@ import { AffiliationModule } from '@/modules/affiliation/affiliation.module';
 import { ModerationModule } from '@/modules/moderation/moderation.module';
 import { BloodDonationModule } from './modules/blood-donation/blood-donation.module';
 import { LostAndFoundModule } from './modules/lost-and-found/lost-and-found.module';
+import { MessagingModule } from './modules/messaging/messaging.module';
 
 
 @Module({
@@ -24,6 +25,7 @@ import { LostAndFoundModule } from './modules/lost-and-found/lost-and-found.modu
     ModerationModule,
     BloodDonationModule,
     LostAndFoundModule,
+    MessagingModule,
 
     ConfigModule.forRoot({
       isGlobal: true,
