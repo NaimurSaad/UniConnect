@@ -12,7 +12,7 @@ export class BloodDonationController {
   @UseGuards(JwtGuard)
   async create(@Body() createDto: CreateBloodRequestDto) {
     
-    const dummyUserId = '123e4567-e89b-12d3-a456-426614174000'; 
+    const dummyUserId = '509ba906-4884-4297-8ddd-78cb178ce806'
     return await this.bloodDonationService.create(createDto, dummyUserId);
   }
 
