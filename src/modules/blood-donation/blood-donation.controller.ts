@@ -1,8 +1,8 @@
-import { Controller, Get, Post, Body, Patch, Param, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, UseGuards, Req, UnauthorizedException } from '@nestjs/common';
 import { BloodDonationService } from './blood-donation.service';
 import { CreateBloodRequestDto } from './dto/create-blood-request.dto';
 import { UpdateBloodRequestDto } from './dto/update-blood-request.dto';
-import { JwtGuard } from '@/common/guard';
+import { JwtGuard } from '@/common/guard'; 
 
 @Controller('blood-donation')
 export class BloodDonationController {
@@ -10,10 +10,15 @@ export class BloodDonationController {
 
   @Post('requests')
   @UseGuards(JwtGuard)
-  async create(@Body() createDto: CreateBloodRequestDto) {
+  async create(@Body() createDto: CreateBloodRequestDto, @Req() req: any) {
+
+    const userId = req.user?.user_id; 
     
-    const dummyUserId = '509ba906-4884-4297-8ddd-78cb178ce806'
-    return await this.bloodDonationService.create(createDto, dummyUserId);
+    if (!userId) {
+      throw new UnauthorizedException('User ID not found in token');
+    }
+
+    return await this.bloodDonationService.create(createDto, userId);
   }
 
   @Get('requests')
@@ -28,8 +33,13 @@ export class BloodDonationController {
 
   @Patch('requests/:id')
   @UseGuards(JwtGuard)
-  async update(@Param('id') id: string, @Body() updateDto: UpdateBloodRequestDto) {
-    const dummyUserId = '123e4567-e89b-12d3-a456-426614174000';
-    return await this.bloodDonationService.update(id, updateDto, dummyUserId);
+  async update(@Param('id') id: string, @Body() updateDto: UpdateBloodRequestDto, @Req() req: any) {
+    const userId = req.user?.user_id;
+    
+    if (!userId) {
+      throw new UnauthorizedException('User ID not found in token');
+    }
+
+    return await this.bloodDonationService.update(id, updateDto, userId);
   }
 }
