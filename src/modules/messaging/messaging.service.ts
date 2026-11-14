@@ -35,7 +35,6 @@ export class MessagingService {
     });
     const savedConversation = await this.conversationRepository.save(conversation);
 
-    // Add creator as participant
     const participants = [creatorId, ...dto.participantIds].map((userId) =>
       this.participantRepository.create({
         conversationId: savedConversation.id,
@@ -56,7 +55,7 @@ export class MessagingService {
   }
 
   async sendMessage(conversationId: string, senderId: string, dto: SendMessageDto) {
-    // Rule: Must be a participant
+
     const isParticipant = await this.participantRepository.findOne({
       where: { conversationId, userId: senderId },
     });
@@ -64,7 +63,6 @@ export class MessagingService {
       throw new ForbiddenException('You are not a participant in this conversation');
     }
 
-    // Rule: Must have content or attachment
     if (!dto.content && (!dto.attachments || dto.attachments.length === 0)) {
       throw new BadRequestException('Message must contain text or at least one attachment');
     }
@@ -121,5 +119,24 @@ export class MessagingService {
     message.content = dto.content;
     message.editedAt = new Date();
     return await this.messageRepository.save(message);
+  }
+
+    async addParticipant(conversationId: string, userIdToAdd: string, requesterId: string) {
+    const conversation = await this.conversationRepository.findOne({ where: { id: conversationId } });
+    if (!conversation) throw new NotFoundException('Conversation not found');
+
+    const requester = await this.participantRepository.findOne({ where: { conversationId, userId: requesterId } });
+    if (!requester) throw new ForbiddenException('You are not a participant in this conversation');
+
+    const existing = await this.participantRepository.findOne({ where: { conversationId, userId: userIdToAdd } });
+    if (existing) throw new BadRequestException('User is already in this conversation');
+
+    const newParticipant = this.participantRepository.create({
+      conversationId,
+      userId: userIdToAdd,
+    });
+    await this.participantRepository.save(newParticipant);
+    
+    return { message: 'Participant added successfully' };
   }
 }

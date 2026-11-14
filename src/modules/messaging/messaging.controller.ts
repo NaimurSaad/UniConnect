@@ -64,4 +64,18 @@ export class MessagingController {
     
     return await this.messagingService.editMessage(messageId, userId, dto);
   }
+  
+  @Post('conversations/:id/participants')
+  @UseGuards(JwtGuard)
+  async addParticipant(
+    @Param('id') conversationId: string,
+    @Body('userId') userIdToAdd: string,
+    @Req() req: any,
+  ) {
+    const requesterId = req.user?.user_id;
+    if (!requesterId) throw new UnauthorizedException('User ID not found');
+    
+    return await this.messagingService.addParticipant(conversationId, userIdToAdd, requesterId);
+  }
+  
 }
