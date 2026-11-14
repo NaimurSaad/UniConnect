@@ -401,3 +401,5 @@ package-lock.json
 dist
 .webpack
 .serverless/**/*.zip
+analysis/
+

@@ -10,4 +10,4 @@ import { dataSourceOptions } from "@/config/.";
 @Module({
   imports: [TypeOrmModule.forRoot(dataSourceOptions)],
 })
-export class PostgresDatabaseProviderModule {}
+export class PostgresDatabaseProviderModule { }

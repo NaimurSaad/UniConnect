@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import { Module } from "@nestjs/common";
 import { ConfigModule } from "@nestjs/config";
 import { PostgresDatabaseProviderModule } from "@/providers/database/postgres/provider.module";
@@ -6,11 +7,34 @@ import { AppService } from "@/src/app.service";
 import global_config from "@/config/global_config";
 import { BullModule } from "@nestjs/bull";
 import { JobsModule } from './modules/jobs/jobs.module';
+=======
+import { Module } from '@nestjs/common';
+import { ConfigModule } from '@nestjs/config';
+import { PostgresDatabaseProviderModule } from '@/providers/database/postgres/provider.module';
+import { AppController } from '@/src/app.controller';
+import { AppService } from '@/src/app.service';
+import global_config from '@/config/global_config';
+import { BullModule } from '@nestjs/bull';
+import { UserModule } from '@/modules/user/user.module';
+import { UniversityModule } from '@/modules/university/university.module';
+import { AuthModule } from '@/modules/auth/auth.module';
+import { AffiliationModule } from '@/modules/affiliation/affiliation.module';
+import { ModerationModule } from '@/modules/moderation/moderation.module';
+
+>>>>>>> origin/saad
 
 @Module({
   imports: [
     PostgresDatabaseProviderModule,
+<<<<<<< HEAD
     JobsModule, 
+=======
+    UserModule,
+    UniversityModule,
+    AuthModule,
+    AffiliationModule,
+    ModerationModule,
+>>>>>>> origin/saad
 
     ConfigModule.forRoot({
       isGlobal: true,
@@ -27,4 +51,4 @@ import { JobsModule } from './modules/jobs/jobs.module';
   controllers: [AppController],
   providers: [AppService],
 })
-export class AppModule {}
+export class AppModule { }
