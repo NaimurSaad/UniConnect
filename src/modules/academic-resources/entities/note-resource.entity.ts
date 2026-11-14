@@ -1,7 +1,7 @@
 import {Column, Entity, PrimaryGeneratedColumn , CreateDateColumn, UpdateDateColumn,ManyToMany ,JoinColumn} from "typeorm";
 import {User} from "../../user/entities/user.entity";
 
-export enum NoteResourceType {
+export enum NoteResourceStatus {
     AVAILABLE = "available",
     HIDDEN = "hidden",
 }
@@ -39,8 +39,8 @@ export class NoteResource {
     @Column({ name: "file_size_bytes", type: "bigint" })
     fileSizeBytes!: string;
 
-    @Column({ type: "enum", enum: NoteResourceType, default: NoteResourceType.AVAILABLE })
-    type!: NoteResourceType;
+   @Column({ type: "enum", enum: NoteResourceStatus, default: NoteResourceStatus.AVAILABLE })
+    status!: NoteResourceStatus;
 
     @CreateDateColumn()
     created_at?: Date;
