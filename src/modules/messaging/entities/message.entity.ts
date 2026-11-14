@@ -4,10 +4,12 @@ import {
   Entity,
   JoinColumn,
   ManyToOne,
+  OneToMany,
   PrimaryGeneratedColumn,
 } from 'typeorm';
 import { User } from '../../user/entities/user.entity';
 import { Conversation } from './conversation.entity';
+import { MessageAttachment } from './message-attachment.entity';
 
 @Entity({ name: 'messages' })
 export class Message {
@@ -39,4 +41,8 @@ export class Message {
 
   @Column({ name: 'deleted_at', type: 'timestamp', nullable: true })
   deletedAt!: Date | null;
+
+    // 👇 এই অংশটুকু নতুন যোগ করুন (শেষ প্রপার্টির নিচে)
+  @OneToMany(() => MessageAttachment, (attachment) => attachment.message)
+  attachments!: MessageAttachment[];
 }
