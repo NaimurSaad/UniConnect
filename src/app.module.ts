@@ -10,14 +10,10 @@ import { UniversityModule } from '@/modules/university/university.module';
 import { AuthModule } from '@/modules/auth/auth.module';
 import { AffiliationModule } from '@/modules/affiliation/affiliation.module';
 import { ModerationModule } from '@/modules/moderation/moderation.module';
-<<<<<<< HEAD
 import { ProjectModule } from '@/modules/project/project.module';
-=======
 import { JobsModule } from './modules/jobs/jobs.module';
 import { AcademicResourcesModule } from './modules/academic-resources/academic-resources.module';
 import { QuestionsModule } from './modules/questions/questions.module';
->>>>>>> origin/Farhan-Shahriar
-
 
 @Module({
   imports: [
@@ -27,13 +23,10 @@ import { QuestionsModule } from './modules/questions/questions.module';
     AuthModule,
     AffiliationModule,
     ModerationModule,
-<<<<<<< HEAD
     ProjectModule,
-=======
     JobsModule,
     AcademicResourcesModule,
     QuestionsModule,
->>>>>>> origin/Farhan-Shahriar
 
     ConfigModule.forRoot({
       isGlobal: true,
