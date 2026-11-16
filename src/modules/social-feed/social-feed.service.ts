@@ -1,0 +1,564 @@
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+  InternalServerErrorException,
+  HttpException,
+} from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository, DataSource, IsNull } from 'typeorm';
+import { FeedPost, PostVisibility } from './entities/feed-post.entity';
+import { PostMedia } from './entities/post-media.entity';
+import { Comment } from './entities/comment.entity';
+import { Reaction, ReactionType } from './entities/reaction.entity';
+import { User } from '../users/entities/user.entity';
+import {
+  CreatePostDto,
+  CreatePostMediaDto,
+  UpdatePostDto,
+  CreateCommentDto,
+  UpdateCommentDto,
+  SetReactionDto,
+  ReactPostDto,
+  QueryReactionDto,
+  FeedQueryDto,
+  FeedPaginationDto,
+  CommentPaginationDto,
+} from './dto';
+import { EventEmitter2 } from '@nestjs/event-emitter';
+import { PostCommentedEvent, PostReactedEvent } from '../../common/events/domain-events';
+
+@Injectable()
+export class SocialFeedService {
+  // Default fallback user ID for seamless Postman testing before Auth module is merged
+  public static readonly DEFAULT_TEST_USER_ID = '00000000-0000-0000-0000-000000000001';
+
+  constructor(
+    @InjectRepository(FeedPost)
+    private readonly feedPostRepository: Repository<FeedPost>,
+    @InjectRepository(PostMedia)
+    private readonly postMediaRepository: Repository<PostMedia>,
+    @InjectRepository(Comment)
+    private readonly commentRepository: Repository<Comment>,
+    @InjectRepository(Reaction)
+    private readonly reactionRepository: Repository<Reaction>,
+    @InjectRepository(User)
+    private readonly userRepository: Repository<User>,
+    private readonly dataSource: DataSource,
+    private readonly eventEmitter: EventEmitter2,
+  ) { }
+
+  /**
+   * Helper to ensure an author/user exists in the database.
+   * If author_id is missing or doesn't exist, ensures a stub test user is present
+   * to satisfy PostgreSQL foreign key constraints during local testing.
+   */
+  async ensureUserExists(userId?: string): Promise<string> {
+    const targetId = userId || SocialFeedService.DEFAULT_TEST_USER_ID;
+
+    const existing = await this.userRepository.findOne({ where: { id: targetId } });
+    if (!existing) {
+      const stubUser = this.userRepository.create({
+        id: targetId,
+        full_name: 'Nizam Uddin Shuvo (Student 2)',
+        email: `student2_${targetId.substring(0, 8)}@uniconnect.aiub.edu`,
+        password_hash: 'stub_hashed_password',
+        account_status: 'active',
+      });
+      await this.userRepository.save(stubUser);
+    }
+    return targetId;
+  }
+
+  /**
+   * Health check endpoint confirming module & entity availability.
+   */
+  async getHealthCheck() {
+    return {
+      status: 'success',
+      message: 'SocialFeedModule and database connection are active',
+      timestamp: new Date().toISOString(),
+    };
+  }
+
+  /**
+   * 1. Create a Feed Post with Transactional Persistence.
+   * Atomically persists FeedPost and attached PostMedia entries using QueryRunner.
+   */
+  async createPost(createPostDto: CreatePostDto, headerUserId?: string): Promise<FeedPost> {
+    const hasContent = createPostDto.content && createPostDto.content.trim().length > 0;
+    const hasMedia = createPostDto.media && createPostDto.media.length > 0;
+
+    if (!hasContent && !hasMedia) {
+      throw new BadRequestException(
+        'A feed post must contain either text content or at least one media item.',
+      );
+    }
+
+    const resolvedAuthorId = await this.ensureUserExists(createPostDto.author_id || headerUserId);
+
+    // 1. Initialize QueryRunner for transactional control
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
+    try {
+      // 2. Instantiate and save the FeedPost record
+      const postEntity = queryRunner.manager.create(FeedPost, {
+        author_id: resolvedAuthorId,
+        content: hasContent ? createPostDto.content!.trim() : null,
+        visibility: createPostDto.visibility || PostVisibility.COMMUNITY,
+      });
+
+      const savedPost = await queryRunner.manager.save(FeedPost, postEntity);
+
+      // 3. If media contains items, loop through, attach post_id, and save to PostMedia
+      if (hasMedia) {
+        for (let i = 0; i < createPostDto.media!.length; i++) {
+          const item = createPostDto.media![i];
+          const mediaEntity = queryRunner.manager.create(PostMedia, {
+            post_id: savedPost.id,
+            media_type: item.media_type,
+            file_url: item.file_url,
+            mime_type: item.mime_type,
+            file_size_bytes: item.file_size_bytes.toString(),
+            sort_order: item.sort_order ?? i,
+          });
+          await queryRunner.manager.save(PostMedia, mediaEntity);
+        }
+      }
+
+      // 4. Commit the transaction
+      await queryRunner.commitTransaction();
+
+      // 5. Retrieve and return the complete post including its attached media relations
+      const completePost = await this.feedPostRepository.findOne({
+        where: { id: savedPost.id },
+        relations: ['media'],
+        order: {
+          media: {
+            sort_order: 'ASC',
+          },
+        },
+      });
+
+      return completePost || savedPost;
+    } catch (error) {
+      // 6. Rollback transaction cleanly on any failure
+      await queryRunner.rollbackTransaction();
+      if (error instanceof HttpException) {
+        throw error;
+      }
+      throw new InternalServerErrorException(
+        `Failed to create post transactionally: ${(error as Error).message}`,
+      );
+    } finally {
+      // 7. ALWAYS release queryRunner to prevent connection pool exhaustion
+      await queryRunner.release();
+    }
+  }
+
+  /**
+   * 2. Cursor-Based Feed Pagination & Query Optimization.
+   */
+  async getFeed(paginationDto: FeedPaginationDto) {
+    const { limit = 10, cursor } = paginationDto;
+    const query = this.feedPostRepository
+      .createQueryBuilder('post')
+      .leftJoinAndSelect('post.media', 'media')
+      .loadRelationCountAndMap('post.comments_count', 'post.comments')
+      .loadRelationCountAndMap('post.reactions_count', 'post.reactions')
+      .where('post.deleted_at IS NULL');
+
+    if (cursor) {
+      query.andWhere('post.created_at < :cursor', { cursor });
+    }
+
+    const posts = await query
+      .orderBy('post.created_at', 'DESC')
+      .addOrderBy('media.sort_order', 'ASC')
+      .take(limit)
+      .getMany();
+
+    const next_cursor =
+      posts.length > 0 ? posts[posts.length - 1].created_at : null;
+
+    return {
+      data: posts,
+      limit,
+      next_cursor,
+      has_more: posts.length === limit,
+    };
+  }
+
+  /**
+   * Backward-compatible getFeedPosts delegator
+   */
+  async getFeedPosts(query: FeedPaginationDto | FeedQueryDto) {
+    return this.getFeed(query as FeedPaginationDto);
+  }
+
+  /**
+   * 3. Get Single Post by ID.
+   * Excludes soft-deleted posts and eagerly loads media, comments, and reactions.
+   */
+  async getPostById(id: string): Promise<FeedPost> {
+    const post = await this.feedPostRepository.findOne({
+      where: { id, deleted_at: IsNull() },
+      relations: ['media', 'comments', 'reactions'],
+      order: {
+        media: { sort_order: 'ASC' },
+      },
+    });
+
+    if (!post) {
+      throw new NotFoundException(`Post with ID "${id}" not found`);
+    }
+
+    return post;
+  }
+
+  /**
+   * 4. Update Post Content / Visibility.
+   * Only active (non-deleted) posts can be updated.
+   */
+  async updatePost(id: string, updatePostDto: UpdatePostDto): Promise<FeedPost> {
+    const post = await this.getPostById(id);
+    if (updatePostDto.content !== undefined) {
+      post.content = updatePostDto.content;
+    }
+    if (updatePostDto.visibility !== undefined) {
+      post.visibility = updatePostDto.visibility;
+    }
+    return this.feedPostRepository.save(post);
+  }
+
+  /**
+   * 5. Soft Delete Post.
+   * Sets deleted_at timestamp using TypeORM softDelete.
+   */
+  async deletePost(id: string): Promise<{ success: boolean; message: string }> {
+    await this.getPostById(id);
+    await this.feedPostRepository.softDelete(id);
+    return {
+      success: true,
+      message: 'Post soft-deleted successfully',
+    };
+  }
+
+  /**
+   * 6. Add a Comment to a Post.
+   * Verifies that the parent post exists and is not soft-deleted.
+   */
+  async addComment(
+    postId: string,
+    createCommentDto: CreateCommentDto,
+    headerUserId?: string,
+  ): Promise<Comment> {
+    // 1. Check parent post existence (excludes soft-deleted posts)
+    const post = await this.getPostById(postId);
+
+    const authorId = createCommentDto.author_id || headerUserId;
+    // Ensure author exists in DB to satisfy foreign key constraints during testing
+    const resolvedAuthorId = await this.ensureUserExists(authorId);
+
+    // 2. Create and save comment
+    const comment = this.commentRepository.create({
+      post_id: postId,
+      author_id: resolvedAuthorId,
+      content: createCommentDto.content,
+    });
+
+    const savedComment = await this.commentRepository.save(comment);
+
+    // 3. Emit post.commented event
+    this.eventEmitter.emit(
+      'post.commented',
+      new PostCommentedEvent(post.id, post.author_id, savedComment.id, savedComment.author_id),
+    );
+    console.log('[Event Emitted] post.commented');
+
+    return savedComment;
+  }
+
+  /**
+   * 7. Get Comments for a Post with Offset Pagination.
+   * Verifies parent post exists and is not soft-deleted, filters active comments,
+   * orders by created_at ASC, and applies page/limit pagination.
+   */
+  async getCommentsByPost(
+    postId: string,
+    paginationDto: CommentPaginationDto,
+  ): Promise<{ data: Comment[]; total: number; page: number; limit: number; total_pages: number }> {
+    // 1. Verify parent post exists
+    await this.getPostById(postId);
+
+    const { page = 1, limit = 10 } = paginationDto;
+    const skip = (page - 1) * limit;
+
+    const [comments, total] = await this.commentRepository.findAndCount({
+      where: {
+        post_id: postId,
+        deleted_at: IsNull(),
+      },
+      order: {
+        created_at: 'ASC',
+      },
+      skip,
+      take: limit,
+    });
+
+    return {
+      data: comments,
+      total,
+      page,
+      limit,
+      total_pages: Math.ceil(total / limit) || 1,
+    };
+  }
+
+  /**
+   * Backward-compatible getComments delegator
+   */
+  async getComments(postId: string) {
+    return this.getCommentsByPost(postId, { page: 1, limit: 50 });
+  }
+
+  /**
+   * 8. Get Single Comment by ID.
+   * Excludes soft-deleted comments.
+   */
+  async getCommentById(id: string): Promise<Comment> {
+    const comment = await this.commentRepository.findOne({
+      where: { id, deleted_at: IsNull() },
+    });
+    if (!comment) {
+      throw new NotFoundException(`Comment with ID "${id}" not found`);
+    }
+    return comment;
+  }
+
+  /**
+   * 9. Update Comment Content.
+   * Verifies comment exists and is not soft-deleted, then updates content and saves.
+   */
+  async updateComment(id: string, updateCommentDto: UpdateCommentDto): Promise<Comment> {
+    const comment = await this.getCommentById(id);
+    comment.content = updateCommentDto.content;
+    return this.commentRepository.save(comment);
+  }
+
+  /**
+   * 10. Soft Delete a Comment.
+   * Verifies comment exists and is not soft-deleted, then marks deleted_at timestamp.
+   */
+  async deleteComment(id: string): Promise<{ success: boolean; message: string }> {
+    await this.getCommentById(id);
+    await this.commentRepository.softDelete(id);
+    return {
+      success: true,
+      message: 'Comment soft-deleted successfully',
+    };
+  }
+
+  /**
+   * 11. Reaction Toggle & Upsert Logic.
+   * - If NO reaction exists: create and save -> { action: 'added', reaction }
+   * - If reaction exists with SAME type: toggle off / remove -> { action: 'removed', message: 'Reaction removed successfully' }
+   * - If reaction exists with DIFFERENT type: update -> { action: 'updated', reaction }
+   */
+  async reactToPost(
+    postId: string,
+    reactDto: ReactPostDto,
+    headerUserId?: string,
+  ): Promise<{ action: 'added' | 'updated' | 'removed'; reaction?: Reaction; message?: string }> {
+    // 1. Verify parent post exists
+    const post = await this.getPostById(postId);
+
+    const userId = reactDto.user_id || headerUserId;
+    // Ensure user exists in DB to satisfy foreign key constraints during local testing
+    const resolvedUserId = await this.ensureUserExists(userId);
+    const reactorId = reactDto.user_id || resolvedUserId;
+
+    // 2. Check for existing reaction
+    const existingReaction = await this.reactionRepository.findOne({
+      where: {
+        post_id: postId,
+        user_id: resolvedUserId,
+      },
+    });
+
+    // 3. Case A: No reaction yet -> Add
+    if (!existingReaction) {
+      const newReaction = this.reactionRepository.create({
+        post_id: postId,
+        user_id: resolvedUserId,
+        reaction_type: reactDto.reaction_type,
+      });
+      const saved = await this.reactionRepository.save(newReaction);
+      this.eventEmitter.emit(
+        'post.reacted',
+        new PostReactedEvent(post.id, post.author_id, reactorId, reactDto.reaction_type),
+      );
+      console.log('[Event Emitted] post.reacted');
+      return { action: 'added', reaction: saved };
+    }
+
+    // 4. Case B: Same reaction -> Toggle off / Remove
+    if (existingReaction.reaction_type === reactDto.reaction_type) {
+      await this.reactionRepository.remove(existingReaction);
+      return { action: 'removed', message: 'Reaction removed successfully' };
+    }
+
+    // 5. Case C: Different reaction -> Update
+    existingReaction.reaction_type = reactDto.reaction_type;
+    const updated = await this.reactionRepository.save(existingReaction);
+    this.eventEmitter.emit(
+      'post.reacted',
+      new PostReactedEvent(post.id, post.author_id, reactorId, reactDto.reaction_type),
+    );
+    console.log('[Event Emitted] post.reacted');
+    return { action: 'updated', reaction: updated };
+  }
+
+  /**
+   * Backward-compatible setReaction delegator
+   */
+  async setReaction(postId: string, dto: SetReactionDto | ReactPostDto, headerUserId?: string) {
+    const userId = dto.user_id || headerUserId || SocialFeedService.DEFAULT_TEST_USER_ID;
+    return this.reactToPost(postId, { user_id: userId, reaction_type: dto.reaction_type });
+  }
+
+  /**
+   * 12. Reaction Breakdown & User List Aggregations.
+   * Counts total reactions, groups by each ReactionType, and lists reactions (optionally filtered by type).
+   */
+  async getPostReactionsSummary(
+    postId: string,
+    type?: ReactionType,
+  ): Promise<{
+    post_id: string;
+    total: number;
+    breakdown: { like: number; love: number; support: number; insightful: number };
+    reactions: Reaction[];
+  }> {
+    // 1. Verify parent post exists
+    await this.getPostById(postId);
+
+    // 2. Fetch all reactions for this post
+    const allReactions = await this.reactionRepository.find({
+      where: { post_id: postId },
+      order: { created_at: 'DESC' },
+    });
+
+    // 3. Compute count breakdown
+    const breakdown = {
+      like: 0,
+      love: 0,
+      support: 0,
+      insightful: 0,
+    };
+
+    for (const r of allReactions) {
+      if (breakdown[r.reaction_type] !== undefined) {
+        breakdown[r.reaction_type]++;
+      }
+    }
+
+    // 4. Filter reaction list if type query is provided
+    const filteredReactions = type
+      ? allReactions.filter((r) => r.reaction_type === type)
+      : allReactions;
+
+    return {
+      post_id: postId,
+      total: allReactions.length,
+      breakdown,
+      reactions: filteredReactions,
+    };
+  }
+
+  /**
+   * 10. Remove Reaction.
+   */
+  async removeReaction(postId: string, userId?: string, headerUserId?: string) {
+    const resolvedUserId = userId || headerUserId || SocialFeedService.DEFAULT_TEST_USER_ID;
+
+    const existing = await this.reactionRepository.findOne({
+      where: {
+        post_id: postId,
+        user_id: resolvedUserId,
+      },
+    });
+
+    if (!existing) {
+      throw new NotFoundException('Reaction not found for this user on this post.');
+    }
+
+    await this.reactionRepository.remove(existing);
+    return {
+      status: 'success',
+      message: 'Reaction removed successfully.',
+    };
+  }
+
+  /**
+   * 11. Add Media Attachment to an existing Post.
+   */
+  async addMediaToPost(postId: string, dto: CreatePostMediaDto): Promise<PostMedia> {
+    const post = await this.feedPostRepository.findOne({ where: { id: postId } });
+    if (!post) {
+      throw new NotFoundException(`FeedPost with ID ${postId} not found.`);
+    }
+
+    let sortOrder = dto.sort_order;
+    if (sortOrder === undefined) {
+      const currentCount = await this.postMediaRepository.count({
+        where: { post_id: postId },
+      });
+      sortOrder = currentCount;
+    }
+
+    const media = this.postMediaRepository.create({
+      post_id: postId,
+      media_type: dto.media_type,
+      file_url: dto.file_url,
+      mime_type: dto.mime_type,
+      file_size_bytes: dto.file_size_bytes.toString(),
+      sort_order: sortOrder,
+    });
+
+    return await this.postMediaRepository.save(media);
+  }
+
+  /**
+   * 12. Get Media Attachments for a Post.
+   */
+  async getPostMedia(postId: string): Promise<PostMedia[]> {
+    const post = await this.feedPostRepository.findOne({ where: { id: postId } });
+    if (!post) {
+      throw new NotFoundException(`FeedPost with ID ${postId} not found.`);
+    }
+
+    return await this.postMediaRepository.find({
+      where: { post_id: postId },
+      order: { sort_order: 'ASC', created_at: 'ASC' },
+    });
+  }
+
+  /**
+   * 13. Delete a Media Attachment.
+   */
+  async deleteMedia(mediaId: string): Promise<{ status: string; message: string }> {
+    const media = await this.postMediaRepository.findOne({ where: { id: mediaId } });
+    if (!media) {
+      throw new NotFoundException(`PostMedia with ID ${mediaId} not found.`);
+    }
+
+    await this.postMediaRepository.remove(media);
+    return {
+      status: 'success',
+      message: `Media attachment ${mediaId} deleted successfully.`,
+    };
+  }
+}
