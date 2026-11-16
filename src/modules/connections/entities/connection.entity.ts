@@ -9,7 +9,7 @@ import {
   Unique,
   Check,
 } from 'typeorm';
-import { User } from '../../users/entities/user.entity';
+import { User } from "@/modules/user/entities/user.entity";
 import { ConnectionStatus } from '../enums/connection-status.enum';
 
 export { ConnectionStatus };

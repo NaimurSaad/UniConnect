@@ -20,7 +20,7 @@ export { CreatePostMediaDto };
 export class CreatePostDto {
   @IsNotEmpty({ message: 'author_id is required' })
   @IsUUID('all', { message: 'author_id must be a valid UUID' })
-  author_id: string;
+  author_id!: string;
 
   @IsContentOrMediaPresent()
   @ValidateIf((o) => !o.media || o.media.length === 0 || o.content !== undefined)

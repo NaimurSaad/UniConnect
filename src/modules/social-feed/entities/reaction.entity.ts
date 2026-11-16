@@ -8,7 +8,7 @@ import {
   Unique,
 } from "typeorm";
 import { FeedPost } from "./feed-post.entity";
-import { User } from "../../users/entities/user.entity";
+import { User } from "@/modules/user/entities/user.entity";
 import { ReactionType } from "../enums/social-feed.enums";
 
 export { ReactionType };
@@ -29,7 +29,7 @@ export class Reaction {
   @Column({ type: "uuid" })
   user_id!: string;
 
-  @ManyToOne(() => User, (user) => user.reactions, { onDelete: "CASCADE" })
+  @ManyToOne(() => User, { onDelete: "CASCADE" })
   @JoinColumn({ name: "user_id" })
   user!: User;
 

@@ -9,7 +9,7 @@ import {
   OneToMany,
   JoinColumn,
 } from "typeorm";
-import { User } from "../../users/entities/user.entity";
+import { User } from "@/modules/user/entities/user.entity";
 import { PostMedia } from "./post-media.entity";
 import { Comment } from "./comment.entity";
 import { Reaction } from "./reaction.entity";
@@ -25,7 +25,7 @@ export class FeedPost {
   @Column({ type: "uuid" })
   author_id!: string;
 
-  @ManyToOne(() => User, (user) => user.feed_posts, { onDelete: "CASCADE" })
+  @ManyToOne(() => User, { onDelete: "CASCADE" })
   @JoinColumn({ name: "author_id" })
   author!: User;
 

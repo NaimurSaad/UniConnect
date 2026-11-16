@@ -14,20 +14,20 @@ export class CreatePostMediaDto {
   @IsEnum(PostMediaType, {
     message: 'media_type must be either image or video',
   })
-  media_type: PostMediaType;
+  media_type!: PostMediaType;
 
   @IsString({ message: 'file_url must be a string' })
   @IsNotEmpty({ message: 'file_url is required' })
-  file_url: string;
+  file_url!: string;
 
   @IsString({ message: 'mime_type must be a string' })
   @IsNotEmpty({ message: 'mime_type is required' })
-  mime_type: string;
+  mime_type!: string;
 
   @Type(() => Number)
   @IsNumber({}, { message: 'file_size_bytes must be a number' })
   @Min(1, { message: 'file_size_bytes must be at least 1' })
-  file_size_bytes: number;
+  file_size_bytes!: number;
 
   @IsOptional()
   @Type(() => Number)

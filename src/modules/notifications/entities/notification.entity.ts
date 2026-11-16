@@ -7,7 +7,7 @@ import {
   JoinColumn,
   Index,
 } from 'typeorm';
-import { User } from '../../users/entities/user.entity';
+import { User } from '@/modules/user/entities/user.entity';
 import { NotificationType } from '../enums/notification-type.enum';
 
 export { NotificationType };

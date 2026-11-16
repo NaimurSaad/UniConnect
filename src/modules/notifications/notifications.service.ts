@@ -9,7 +9,8 @@ import { Repository, IsNull } from 'typeorm';
 import { Notification } from './entities/notification.entity';
 import { CreateNotificationDto } from './dto/create-notification.dto';
 import { NotificationPaginationDto } from './dto/notification-pagination.dto';
-import { User } from '../users/entities/user.entity';
+import { User } from '@/modules/user/entities/user.entity';
+import { AccountStatus } from '@/common/enums/account-status.enum';
 
 @Injectable()
 export class NotificationsService {
@@ -37,10 +38,10 @@ export class NotificationsService {
     if (!existing) {
       const stubUser = this.userRepository.create({
         id: targetId,
-        full_name: 'Nizam Uddin Shuvo (Student 2)',
+        fullName: 'Nizam Uddin Shuvo (Student 2)',
         email: `student2_${targetId.substring(0, 8)}@uniconnect.aiub.edu`,
-        password_hash: 'stub_hashed_password',
-        account_status: 'active',
+        passwordHash: 'stub_hashed_password',
+        accountStatus: AccountStatus.ACTIVE,
       });
       await this.userRepository.save(stubUser);
       this.logger.log(`Created stub user for testing: ${targetId}`);

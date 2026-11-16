@@ -10,7 +10,8 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Connection } from './entities/connection.entity';
 import { ConnectionStatus } from './enums/connection-status.enum';
-import { User } from '../users/entities/user.entity';
+import { User } from '@/modules/user/entities/user.entity';
+import { AccountStatus } from '@/common/enums/account-status.enum';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import {
   ConnectionRequestedEvent,
@@ -44,10 +45,10 @@ export class ConnectionsService {
     if (!existing) {
       const stubUser = this.userRepository.create({
         id: targetId,
-        full_name: 'Nizam Uddin Shuvo (Student 2)',
+        fullName: 'Nizam Uddin Shuvo (Student 2)',
         email: `student2_${targetId.substring(0, 8)}@uniconnect.aiub.edu`,
-        password_hash: 'stub_hashed_password',
-        account_status: 'active',
+        passwordHash: 'stub_hashed_password',
+        accountStatus: AccountStatus.ACTIVE,
       });
       await this.userRepository.save(stubUser);
       this.logger.log(`Created stub user for testing: ${targetId}`);
@@ -341,15 +342,15 @@ export class ConnectionsService {
         updated_at: true,
         requester: {
           id: true,
-          full_name: true,
+          fullName: true,
           email: true,
-          account_status: true,
+          accountStatus: true,
         },
         receiver: {
           id: true,
-          full_name: true,
+          fullName: true,
           email: true,
-          account_status: true,
+          accountStatus: true,
         },
       },
       order: {
@@ -398,15 +399,15 @@ export class ConnectionsService {
         updated_at: true,
         requester: {
           id: true,
-          full_name: true,
+          fullName: true,
           email: true,
-          account_status: true,
+          accountStatus: true,
         },
         receiver: {
           id: true,
-          full_name: true,
+          fullName: true,
           email: true,
-          account_status: true,
+          accountStatus: true,
         },
       },
       order: {
@@ -455,15 +456,15 @@ export class ConnectionsService {
         updated_at: true,
         requester: {
           id: true,
-          full_name: true,
+          fullName: true,
           email: true,
-          account_status: true,
+          accountStatus: true,
         },
         receiver: {
           id: true,
-          full_name: true,
+          fullName: true,
           email: true,
-          account_status: true,
+          accountStatus: true,
         },
       },
       order: {

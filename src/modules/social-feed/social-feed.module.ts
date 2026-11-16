@@ -4,7 +4,7 @@ import { FeedPost } from './entities/feed-post.entity';
 import { PostMedia } from './entities/post-media.entity';
 import { Comment } from './entities/comment.entity';
 import { Reaction } from './entities/reaction.entity';
-import { User } from '../users/entities/user.entity';
+import { User } from '@/modules/user/entities/user.entity';
 import { SocialFeedController } from './social-feed.controller';
 import { SocialFeedService } from './social-feed.service';
 import { IsContentOrMediaPresentConstraint } from './validators/is-content-or-media-present.validator';

@@ -11,7 +11,8 @@ import { FeedPost, PostVisibility } from './entities/feed-post.entity';
 import { PostMedia } from './entities/post-media.entity';
 import { Comment } from './entities/comment.entity';
 import { Reaction, ReactionType } from './entities/reaction.entity';
-import { User } from '../users/entities/user.entity';
+import { User } from '@/modules/user/entities/user.entity';
+import { AccountStatus } from '@/common/enums/account-status.enum';
 import {
   CreatePostDto,
   CreatePostMediaDto,
@@ -60,10 +61,10 @@ export class SocialFeedService {
     if (!existing) {
       const stubUser = this.userRepository.create({
         id: targetId,
-        full_name: 'Nizam Uddin Shuvo (Student 2)',
+        fullName: 'Nizam Uddin Shuvo (Student 2)',
         email: `student2_${targetId.substring(0, 8)}@uniconnect.aiub.edu`,
-        password_hash: 'stub_hashed_password',
-        account_status: 'active',
+        passwordHash: 'stub_hashed_password',
+        accountStatus: AccountStatus.ACTIVE,
       });
       await this.userRepository.save(stubUser);
     }

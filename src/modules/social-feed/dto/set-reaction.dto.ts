@@ -5,7 +5,7 @@ export class SetReactionDto {
   @IsEnum(ReactionType, {
     message: 'reaction_type must be one of: like, love, support, insightful',
   })
-  reaction_type: ReactionType;
+  reaction_type!: ReactionType;
 
   // Optional user_id for testing before auth guard merge
   @IsOptional()

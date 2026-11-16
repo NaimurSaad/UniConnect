@@ -5,6 +5,7 @@ import { AppController } from '@/src/app.controller';
 import { AppService } from '@/src/app.service';
 import global_config from '@/config/global_config';
 import { BullModule } from '@nestjs/bull';
+import { EventEmitterModule } from '@nestjs/event-emitter';
 import { UserModule } from '@/modules/user/user.module';
 import { UniversityModule } from '@/modules/university/university.module';
 import { AuthModule } from '@/modules/auth/auth.module';
@@ -17,9 +18,13 @@ import { QuestionsModule } from './modules/questions/questions.module';
 import { BloodDonationModule } from './modules/blood-donation/blood-donation.module';
 import { LostAndFoundModule } from './modules/lost-and-found/lost-and-found.module';
 import { MessagingModule } from './modules/messaging/messaging.module';
+import { SocialFeedModule } from './modules/social-feed/social-feed.module';
+import { ConnectionsModule } from './modules/connections/connections.module';
+import { NotificationsModule } from './modules/notifications/notifications.module';
 
 @Module({
   imports: [
+    EventEmitterModule.forRoot(),
     PostgresDatabaseProviderModule,
     UserModule,
     UniversityModule,
@@ -33,6 +38,9 @@ import { MessagingModule } from './modules/messaging/messaging.module';
     BloodDonationModule,
     LostAndFoundModule,
     MessagingModule,
+    SocialFeedModule,
+    ConnectionsModule,
+    NotificationsModule,
 
     ConfigModule.forRoot({
       isGlobal: true,
