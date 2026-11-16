@@ -14,6 +14,9 @@ import { ProjectModule } from '@/modules/project/project.module';
 import { JobsModule } from './modules/jobs/jobs.module';
 import { AcademicResourcesModule } from './modules/academic-resources/academic-resources.module';
 import { QuestionsModule } from './modules/questions/questions.module';
+import { BloodDonationModule } from './modules/blood-donation/blood-donation.module';
+import { LostAndFoundModule } from './modules/lost-and-found/lost-and-found.module';
+import { MessagingModule } from './modules/messaging/messaging.module';
 
 @Module({
   imports: [
@@ -27,6 +30,9 @@ import { QuestionsModule } from './modules/questions/questions.module';
     JobsModule,
     AcademicResourcesModule,
     QuestionsModule,
+    BloodDonationModule,
+    LostAndFoundModule,
+    MessagingModule,
 
     ConfigModule.forRoot({
       isGlobal: true,
