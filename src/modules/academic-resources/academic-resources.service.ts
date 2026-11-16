@@ -11,19 +11,22 @@ constructor
 private readonly noteRepository: Repository<NoteResource>,
 ){}
 
-async getResources(search?: string, course?: string){
+async getResources(search?: string, course?: string, status?: string){
     try{
         const qb = this.noteRepository.createQueryBuilder("note").leftJoinAndSelect("note.uploader", "uploader");
-        qb.andWhere("note.status = :status", { status: NoteResourceStatus.AVAILABLE });
+        
+       
+        qb.andWhere("note.status = :status", { status: status || NoteResourceStatus.AVAILABLE });
+        
         if(search) qb.andWhere("(note.title ILIKE :s OR note.description ILIKE :s)", { s: `%${search}%` });
         if(course) qb.andWhere("note.course ILIKE :c", { c: `%${course}%` });
-        
         
         qb.orderBy("note.created_at", "DESC");
         const notes = await qb.getMany();
         return notes;
     }
     catch (error){
+        console.error("Database Error in getResources: ", error); 
         throw error;
     }
 }
