@@ -35,6 +35,7 @@ export class AuthService {
     }> {
         const expires_in = Date.now() + 1000 * 60 * 60 * 24 * 7; // 7 days
         const accessPayload = {
+            id: user.id,
             user_id: user.id,
             name: user.fullName,
             email: user.email,
