@@ -12,6 +12,7 @@ import { AffiliationModule } from '@/modules/affiliation/affiliation.module';
 import { ModerationModule } from '@/modules/moderation/moderation.module';
 import { JobsModule } from './modules/jobs/jobs.module';
 import { AcademicResourcesModule } from './modules/academic-resources/academic-resources.module';
+import { QuestionsModule } from './modules/questions/questions.module';
 
 
 @Module({
@@ -24,6 +25,7 @@ import { AcademicResourcesModule } from './modules/academic-resources/academic-r
     ModerationModule,
     JobsModule,
     AcademicResourcesModule,
+    QuestionsModule,
 
     ConfigModule.forRoot({
       isGlobal: true,
