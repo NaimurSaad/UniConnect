@@ -10,6 +10,7 @@ import { UniversityModule } from '@/modules/university/university.module';
 import { AuthModule } from '@/modules/auth/auth.module';
 import { AffiliationModule } from '@/modules/affiliation/affiliation.module';
 import { ModerationModule } from '@/modules/moderation/moderation.module';
+import { ProjectModule } from '@/modules/project/project.module';
 
 
 @Module({
@@ -20,6 +21,7 @@ import { ModerationModule } from '@/modules/moderation/moderation.module';
     AuthModule,
     AffiliationModule,
     ModerationModule,
+    ProjectModule,
 
     ConfigModule.forRoot({
       isGlobal: true,
