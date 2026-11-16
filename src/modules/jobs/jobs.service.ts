@@ -30,6 +30,23 @@ async getJobs(search?: string, type?: string, status: string = "open"){
     }
 }
 
+
+async getJobById(id: string){
+    try{
+        const job = await this.jobRepository.findOne({
+            where: { id: id },
+            relations: ["author"], 
+        });
+        if(!job){
+            throw new NotFoundException("Job not found");
+        }
+        return job;
+    }
+    catch(error){
+        throw error;
+    }
+}
+
 async createJob(userId: string, dto: CreateJobDto){
     try{
         if(dto.deadline && new Date(dto.deadline).getTime() < Date.now()){
