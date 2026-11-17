@@ -22,6 +22,7 @@
     "migration:run": "ts-node -r tsconfig-paths/register ./src/script/typeorm_migration_run.ts",
     "migration:rollback": "ts-node -r tsconfig-paths/register ./src/script/typeorm_migration_rollback.ts",
     "migration:rollbackAll": "ts-node -r tsconfig-paths/register ./src/script/typeorm_migration_rollback_all.ts",
+    "seed:superadmin": "ts-node -r tsconfig-paths/register ./src/script/seed-superadmin.ts",
     "entity:create": "typeorm-ts-node-commonjs entity:create",
     "seeder:run": "node dist/seeder",
     "seeder:refresh": "node dist/seeder --refresh",

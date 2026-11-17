@@ -1,6 +1,6 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Patch, Post, Request, UseGuards } from '@nestjs/common';
 import { UserService } from './user.service';
-import { CreateUserDto, UpdateUserDto, UpdateUserProfileDto } from './dto/user.dto';
+import { AssignRoleDto, CreateUserDto, UpdateUserDto, UpdateUserProfileDto } from './dto/user.dto';
 import { JwtGuard, RolesGuard } from '@/common/guard';
 import { Roles } from '@/common/decorators';
 import { Role } from '@/common/enums/role.enum';
@@ -36,6 +36,17 @@ export class UserController {
   @UseGuards(JwtGuard)
   async updateProfile(@Param('id') id: string, @Body() dto: UpdateUserProfileDto) {
     return await this.userService.updateProfile(id, dto);
+  }
+
+  @Patch(':id/role')
+  @UseGuards(JwtGuard)
+  async assignRole(
+    @Request() req: any,
+    @Param('id') targetUserId: string,
+    @Body() dto: AssignRoleDto,
+  ) {
+    const actorRole = req.user.role as Role;
+    return await this.userService.assignRole(actorRole, targetUserId, dto.role);
   }
 
   @Delete(':id')

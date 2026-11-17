@@ -18,10 +18,6 @@ export class CreateUserDto {
   @IsOptional()
   @IsEnum(AccountStatus)
   accountStatus?: AccountStatus;
-
-  @IsOptional()
-  @IsEnum(Role)
-  role?: Role;
 }
 
 export class UpdateUserDto {
@@ -40,10 +36,12 @@ export class UpdateUserDto {
   @IsOptional()
   @IsEnum(AccountStatus)
   accountStatus?: AccountStatus;
+}
 
-  @IsOptional()
+export class AssignRoleDto {
+  @IsNotEmpty()
   @IsEnum(Role)
-  role?: Role;
+  role!: Role;
 }
 
 export class UpdateUserProfileDto {

@@ -1,10 +1,11 @@
-import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
+import { ConflictException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import * as argon2 from 'argon2';
 import { User } from './entities/user.entity';
 import { UserProfile } from './entities/user-profile.entity';
 import { CreateUserDto, UpdateUserDto, UpdateUserProfileDto } from './dto/user.dto';
+import { Role, RoleHierarchy } from '@/common/enums/role.enum';
 
 @Injectable()
 export class UserService {
@@ -48,7 +49,7 @@ export class UserService {
         email: dto.email,
         passwordHash,
         accountStatus: dto.accountStatus,
-        role: dto.role,
+        role: Role.USER, // Automatically assigned to all new users
         profile: this.profileRepository.create(),
       });
 
@@ -83,7 +84,6 @@ export class UserService {
       }
       if (dto.fullName) user.fullName = dto.fullName;
       if (dto.accountStatus) user.accountStatus = dto.accountStatus;
-      if (dto.role) user.role = dto.role;
 
       const saved = await this.userRepository.save(user);
       const { passwordHash, ...sanitized } = saved;
@@ -91,6 +91,41 @@ export class UserService {
     } catch (error) {
       throw error;
     }
+  }
+
+  async assignRole(actorRole: Role, targetUserId: string, newRole: Role) {
+    // 1. SUPER_ADMIN cannot be granted via API
+    if (newRole === Role.SUPER_ADMIN) {
+      throw new ForbiddenException('SUPER_ADMIN role cannot be assigned via API.');
+    }
+
+    const actorRank = RoleHierarchy[actorRole] || 0;
+    const newRoleRank = RoleHierarchy[newRole] || 0;
+
+    // 2. Requester can only grant roles strictly lower than their own
+    if (actorRank <= newRoleRank) {
+      throw new ForbiddenException(
+        `Permission denied: Your role (${actorRole}) cannot assign role (${newRole}). You can only grant roles lower than your own.`
+      );
+    }
+
+    const targetUser = await this.userRepository.findOne({ where: { id: targetUserId } });
+    if (!targetUser) {
+      throw new NotFoundException(`User with ID ${targetUserId} not found`);
+    }
+
+    // 3. Requester cannot modify someone of equal or higher rank
+    const targetRank = RoleHierarchy[targetUser.role] || 0;
+    if (actorRank <= targetRank) {
+      throw new ForbiddenException(
+        `Permission denied: You cannot modify the role of a user with equal or higher rank (${targetUser.role}).`
+      );
+    }
+
+    targetUser.role = newRole;
+    const saved = await this.userRepository.save(targetUser);
+    const { passwordHash, ...sanitized } = saved;
+    return sanitized;
   }
 
   async updateProfile(userId: string, dto: UpdateUserProfileDto) {
