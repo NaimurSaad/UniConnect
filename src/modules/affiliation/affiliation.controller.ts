@@ -56,7 +56,7 @@ export class AffiliationController {
         return await this.affiliationService.getAllRequests();
     }
 
-    @Patch(['requests/:id/review', 'requests/:id'])
+    @Patch('requests/:id/review')
     @UseGuards(JwtGuard, RolesGuard)
     @Roles(Role.ADMIN)
     async reviewRequest(

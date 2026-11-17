@@ -395,11 +395,14 @@ Temporary Items
 yarn.lock
 package-lock.json
 
-=======
 # Local
 .env
 dist
 .webpack
 .serverless/**/*.zip
 analysis/
+
+# Reports and Documentation Artifacts (stored in /res)
+UniConnect*
+*.pdf
 

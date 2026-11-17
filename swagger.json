@@ -591,40 +591,7 @@
     },
     "/affiliations/requests/{id}/review": {
       "patch": {
-        "operationId": "AffiliationController_reviewRequest[0]",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/ReviewAffiliationRequestDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "tags": [
-          "Affiliation"
-        ]
-      }
-    },
-    "/affiliations/requests/{id}": {
-      "patch": {
-        "operationId": "AffiliationController_reviewRequest[1]",
+        "operationId": "AffiliationController_reviewRequest",
         "parameters": [
           {
             "name": "id",

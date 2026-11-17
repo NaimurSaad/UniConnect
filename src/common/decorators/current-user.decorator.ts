@@ -31,6 +31,10 @@ export const CurrentUser = createParamDecorator(
       throw new UnauthorizedException("User not authenticated");
     }
 
+    if (data && typeof data === "string" && typeof user === "object") {
+      return (user as any)[data] ?? user;
+    }
+
     return user;
   },
 );
