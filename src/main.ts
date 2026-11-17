@@ -49,12 +49,34 @@ async function bootstrap() {
 
   // 2. Swagger Configuration
   const config = new DocumentBuilder()
-    .setTitle("KDex API")
+    .setTitle("UniConnect API")
+    .setDescription(
+      "AIUB CSC4161 (Advanced Programming in Web Technology) — Complete API Specification for University Community Platform",
+    )
     .setVersion("1.0")
-    .addBearerAuth()
+    .addBearerAuth(
+      {
+        type: "http",
+        scheme: "bearer",
+        bearerFormat: "JWT",
+        name: "JWT",
+        description: "Enter JWT token",
+        in: "header",
+      },
+      "JWT-auth",
+    )
     .build();
   const document = SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup("api", app, document);
+  SwaggerModule.setup("api", app, document, {
+    swaggerOptions: {
+      persistAuthorization: true,
+    },
+  });
+
+  // Save physical swagger.json
+  const fs = require("fs");
+  const swaggerPath = join(process.cwd(), "swagger.json");
+  fs.writeFileSync(swaggerPath, JSON.stringify(document, null, 2), "utf8");
 
   // 3. Cookie Parser
   const cookieSecret =
