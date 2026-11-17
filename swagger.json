@@ -952,6 +952,28 @@
       }
     },
     "/jobs": {
+      "post": {
+        "operationId": "JobsController_createJob",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateJobDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Jobs"
+        ]
+      },
       "get": {
         "operationId": "JobsController_getJobs",
         "parameters": [
@@ -2887,6 +2909,10 @@
         "properties": {}
       },
       "CreateProjectCommentDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "CreateJobDto": {
         "type": "object",
         "properties": {}
       },

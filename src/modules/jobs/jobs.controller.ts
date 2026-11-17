@@ -8,6 +8,11 @@ import { JwtGuard } from "../../common/guard/jwt.guard";
 export class JobsController {
     constructor(private readonly jobsService: JobsService) {}
 
+    @Post()
+    async createJob(@Req() req: any, @Body(ValidationPipe) dto: CreateJobDto) {
+        return await this.jobsService.createJob(req.user.user_id, dto);
+    }
+
     @Get()
     async getJobs(
         @Query("search") search?: string,
