@@ -21,6 +21,7 @@ import { PostMediaType } from './enums/social-feed.enums';
 import { SocialFeedService } from './social-feed.service';
 import { IsPostAuthorGuard } from './guards/is-post-author.guard';
 import { IsCommentAuthorGuard } from './guards/is-comment-author.guard';
+import { RequireUserGuard } from '../../common/guards/require-user.guard';
 import {
   CreatePostDto,
   CreatePostMediaDto,
@@ -55,6 +56,7 @@ export class SocialFeedController {
    * Multipart/form-data with field 'file'
    */
   @Post('upload-media')
+  @UseGuards(RequireUserGuard)
   @UseInterceptors(FileInterceptor('file', multerOptions))
   uploadMedia(
     @UploadedFile() file: Express.Multer.File,
@@ -98,6 +100,7 @@ export class SocialFeedController {
    * POST /feed/posts
    */
   @Post('posts')
+  @UseGuards(RequireUserGuard)
   createPost(
     @Body() createPostDto: CreatePostDto,
     @CurrentUser('id') currentUserId?: string,
@@ -110,6 +113,7 @@ export class SocialFeedController {
    * GET /feed/posts?limit=10&cursor=...
    */
   @Get('posts')
+  @UseGuards(RequireUserGuard)
   getFeed(@Query() paginationDto: FeedPaginationDto) {
     return this.socialFeedService.getFeed(paginationDto);
   }
@@ -160,6 +164,7 @@ export class SocialFeedController {
    * GET /feed/posts/:id
    */
   @Get('posts/:id')
+  @UseGuards(RequireUserGuard)
   getPostById(@Param('id') id: string) {
     return this.socialFeedService.getPostById(id);
   }
@@ -194,6 +199,7 @@ export class SocialFeedController {
    * POST /feed/posts/:postId/comments
    */
   @Post('posts/:postId/comments')
+  @UseGuards(RequireUserGuard)
   addComment(
     @Param('postId', ParseUUIDPipe) postId: string,
     @Body() createCommentDto: CreateCommentDto,
@@ -207,6 +213,7 @@ export class SocialFeedController {
    * GET /feed/posts/:postId/comments?page=1&limit=10
    */
   @Get('posts/:postId/comments')
+  @UseGuards(RequireUserGuard)
   getComments(
     @Param('postId', ParseUUIDPipe) postId: string,
     @Query() paginationDto: CommentPaginationDto,
@@ -244,6 +251,7 @@ export class SocialFeedController {
    * POST /feed/posts/:postId/reactions
    */
   @Post('posts/:postId/reactions')
+  @UseGuards(RequireUserGuard)
   reactToPost(
     @Param('postId', ParseUUIDPipe) postId: string,
     @Body() reactDto: ReactPostDto,
@@ -257,6 +265,7 @@ export class SocialFeedController {
    * GET /feed/posts/:postId/reactions
    */
   @Get('posts/:postId/reactions')
+  @UseGuards(RequireUserGuard)
   getPostReactionsSummary(
     @Param('postId', ParseUUIDPipe) postId: string,
     @Query() queryDto: QueryReactionDto,
@@ -269,6 +278,7 @@ export class SocialFeedController {
    * DELETE /feed/posts/:id/reactions
    */
   @Delete('posts/:id/reactions')
+  @UseGuards(RequireUserGuard)
   removeReaction(
     @Param('id') postId: string,
     @Headers('x-user-id') headerUserId?: string,
@@ -281,6 +291,7 @@ export class SocialFeedController {
    * POST /feed/posts/:id/media
    */
   @Post('posts/:id/media')
+  @UseGuards(RequireUserGuard)
   addMediaToPost(
     @Param('id') postId: string,
     @Body() dto: CreatePostMediaDto,
@@ -293,6 +304,7 @@ export class SocialFeedController {
    * GET /feed/posts/:id/media
    */
   @Get('posts/:id/media')
+  @UseGuards(RequireUserGuard)
   getPostMedia(@Param('id') postId: string) {
     return this.socialFeedService.getPostMedia(postId);
   }
@@ -302,6 +314,7 @@ export class SocialFeedController {
    * DELETE /feed/media/:mediaId
    */
   @Delete('media/:mediaId')
+  @UseGuards(RequireUserGuard)
   deleteMedia(@Param('mediaId') mediaId: string) {
     return this.socialFeedService.deleteMedia(mediaId);
   }

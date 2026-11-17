@@ -16,14 +16,16 @@ export class ProjectController {
         return await this.projectService.createProject(authorId, dto);
     }
 
-    // 2. Get all projects (public with filters & search)
+    // 2. Get all projects (internal with filters & search)
     @Get()
+    @UseGuards(JwtGuard)
     async getProjects(@Query() query: ProjectQueryDto) {
         return await this.projectService.getProjects(query);
     }
 
     // 3. Get single project details (with comments and reactions)
     @Get(':id')
+    @UseGuards(JwtGuard)
     async getProjectById(@Param('id', ParseUUIDPipe) id: string, @Request() req: any) {
         const currentUserId = req.user?.user_id || req.user?.id || req.user?.sub;
         return await this.projectService.getProjectById(id, currentUserId);

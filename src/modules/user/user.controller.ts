@@ -10,11 +10,13 @@ export class UserController {
   constructor(private readonly userService: UserService) { }
 
   @Get()
+  @UseGuards(JwtGuard)
   async getUsers() {
     return await this.userService.getUsers();
   }
 
   @Get(':id')
+  @UseGuards(JwtGuard)
   async getUserById(@Param('id') id: string) {
     return await this.userService.getUserById(id);
   }
@@ -25,11 +27,13 @@ export class UserController {
   }
 
   @Patch(':id')
+  @UseGuards(JwtGuard)
   async updateUser(@Param('id') id: string, @Body() dto: UpdateUserDto) {
     return await this.userService.updateUser(id, dto);
   }
 
   @Patch(':id/profile')
+  @UseGuards(JwtGuard)
   async updateProfile(@Param('id') id: string, @Body() dto: UpdateUserProfileDto) {
     return await this.userService.updateProfile(id, dto);
   }

@@ -19,11 +19,13 @@ export class LostAndFoundController {
   }
 
   @Get('posts')
+  @UseGuards(JwtGuard)
   async findAll() {
     return await this.lostAndFoundService.findAll();
   }
 
   @Get('posts/:id')
+  @UseGuards(JwtGuard)
   async findOne(@Param('id') id: string) {
     return await this.lostAndFoundService.findOne(id);
   }

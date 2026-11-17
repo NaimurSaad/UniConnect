@@ -25,11 +25,13 @@ export class BloodDonationController {
   }
 
   @Get('requests')
+  @UseGuards(JwtGuard)
   async findAll() {
     return await this.bloodDonationService.findAll();
   }
 
   @Get('requests/:id')
+  @UseGuards(JwtGuard)
   async findOne(@Param('id') id: string) {
     return await this.bloodDonationService.findOne(id);
   }
@@ -60,6 +62,7 @@ export class BloodDonationController {
   }
 
   @Get('requests/:id/responses')
+  @UseGuards(JwtGuard)
   async getResponses(@Param('id') requestId: string) {
     return await this.bloodDonationService.getResponsesForRequest(requestId);
   }
